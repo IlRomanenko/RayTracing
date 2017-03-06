@@ -1,0 +1,95 @@
+viewport
+    origin -1000 0. 0.
+    topleft -10. 10. -10. # Верхний-левый угол экрана
+    bottomleft -10. -10. -10 # Нижний-левый угол экрана
+    topright -10. 10. 10. # Верхний-правый угол экрана
+endviewport
+
+materials
+    entry
+        name red
+        color 128 0 0
+        alpha 0
+        reflect 0
+        refract 0
+    endentry
+
+    entry
+        name yellow
+        color 128 128 128
+        alpha 0
+        reflect 0
+        refract 0
+    endentry
+endmaterials
+
+lights
+    # Описание нормировочных коэффициентов
+    reference
+        # Мощность эталонного источника
+        power 1
+        # Расстояние от него до эталонной плоскости
+        distance 1
+    endreference
+    # Описание одного источника света
+    point
+        # Координаты
+        coords -10 0 0
+        # Мощность
+        power 500
+    endpoint
+
+
+      # Описание нормировочных коэффициентов
+        reference
+            # Мощность эталонного источника
+            power 1
+            # Расстояние от него до эталонной плоскости
+            distance 1
+        endreference
+        # Описание одного источника света
+        point
+            # Координаты
+            coords 100 0 0
+            # Мощность
+            power 500
+        endpoint
+
+
+          # Описание нормировочных коэффициентов
+            reference
+                # Мощность эталонного источника
+                power 1
+                # Расстояние от него до эталонной плоскости
+                distance 1
+            endreference
+            # Описание одного источника света
+            point
+                # Координаты
+                coords 0 0 100
+                # Мощность
+                power 500
+            endpoint
+endlights
+
+geometry
+	sphere
+		coords 500 -1 -1
+		radius 3
+		material red
+	endsphere
+
+    triangle
+        vertex 1 0 0
+        vertex 1 0 5
+        vertex 1 1 1
+        material red
+    endtriangle
+
+    triangle
+        vertex 8 0 0
+        vertex 6 0 5
+        vertex 4 2 5
+        material yellow
+    endtriangle
+endgeometry

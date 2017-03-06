@@ -1,0 +1,73 @@
+viewport
+    origin 0 0 20
+    topleft -10 10 10 # Верхний-левый угол экрана
+    bottomleft -10 -10 10 # Нижний-левый угол экрана
+    topright 10 10 10 # Верхний-правый угол экрана
+endviewport
+
+materials
+    entry
+        name red
+        color 128 0 0
+        alpha 0
+        reflect 0
+        refract 0
+    endentry
+
+    entry
+            name green
+            color 0 255 0
+            alpha 0
+            reflect 0
+            refract 0
+        endentry
+endmaterials
+
+lights
+
+    reference
+            # Мощность эталонного источника
+            power 1
+            # Расстояние от него до эталонной плоскости
+            distance 1
+        endreference
+        # Описание одного источника света
+        point
+            # Координаты
+            coords 0 100 5
+            # Мощность
+            power 500
+        endpoint
+
+    reference
+            # Мощность эталонного источника
+            power 1
+            # Расстояние от него до эталонной плоскости
+            distance 1
+        endreference
+        # Описание одного источника света
+        point
+            # Координаты
+            coords 100 0 5
+            # Мощность
+            power 500
+        endpoint
+endlights
+
+
+geometry
+	sphere
+		coords 0 0 -18
+		radius 4
+		material red
+	endsphere
+
+	quadrangle
+    		vertex -5 -5 -10
+    		vertex 5 -5  -10
+    		vertex 5 5 -10
+    		vertex -5 5 -10
+    		material green
+    endquadrangle
+
+endgeometry
