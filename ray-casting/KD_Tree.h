@@ -65,7 +65,7 @@ public:
 
     };
 
-    const ldb traversalCoef = 1, intersectionCoef = 2;
+    const ldb traversalCoef = 1, intersectionCoef = 10;
 
 
     const BoundingBox getBoundingBox(const vector<IGeometryObject *> &objects) const {
@@ -270,6 +270,10 @@ public:
 
     Intersection findIntersection(pnode node, const Ray &ray, const array<ldb, 2> coefs) {
 
+        if (!node->boundingBox.intersect(ray).first) {
+            return Intersection();
+        }
+
         if (node->isLeaf != nullptr) {
             Intersection intersection;
             ldb intersectionCoef = 1e30;
@@ -290,6 +294,7 @@ public:
             return intersection;
         }
 
+/*
         pair<bool, ldb> planeCoef = getPlaneSplitCoef(node, ray);
 
         if (!planeCoef.first) {
@@ -317,7 +322,7 @@ public:
             pnode part = node->left->boundingBox.contains(inPoint) ? node->left : node->right;
             return findIntersection(part, ray, coefs);
         }
-
+*/
         Intersection left = findIntersection(node->left, ray, coefs);
         Intersection right = findIntersection(node->right, ray, coefs);
         if (left) {

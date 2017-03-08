@@ -177,9 +177,8 @@ void initRayCasting() {
     Viewport viewport;
     vector<Light> lights;
     vector<IGeometryObject *> geometry;
-    /*ObjLoader rtFile("examples/obj_examples/scene.obj", "examples/obj_examples/", materialsFactory,
-                     viewport, lights, geometry);*/
-    RT_file rtFile("examples/scene.rt", materialsFactory, viewport, lights, geometry);
+    ObjLoader rtFile("examples/obj_examples/buggy2.1.obj", "examples/obj_examples/", materialsFactory, viewport, lights, geometry);
+    //RT_file rtFile("examples/scene.rt", materialsFactory, viewport, lights, geometry);
 
     tree = new KD_Tree(geometry);
 }

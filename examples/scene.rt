@@ -1,8 +1,8 @@
 viewport
-    origin 30 0. 0.
-    topleft 10. 10. -10. # Верхний-левый угол экрана
-    bottomleft 10. -10. -10 # Нижний-левый угол экрана
-    topright 10. 10. 10. # Верхний-правый угол экрана
+    origin 1000 0. 0.
+    topleft 100. 100. -100. # Верхний-левый угол экрана
+    bottomleft 100. -100. -100 # Нижний-левый угол экрана
+    topright 100. 100. 100. # Верхний-правый угол экрана
 endviewport
 
 materials
@@ -44,31 +44,16 @@ endlights
 
 geometry
 
-
-    triangle
-        vertex 1 0 0
-        vertex 1 0 5
-        vertex 1 1 1
-        material red
-    endtriangle
-
-    triangle
-        vertex 8 0 0
-        vertex 6 0 5
-        vertex 4 2 5
-        material yellow
-    endtriangle
-
     sphere
-		coords 3 3 3
-		radius 1
+		coords 0 0 0
+		radius 10
 		material red
 	endsphere
 
 	sphere
-		coords 3 -0 0
+		coords 15 -0 0
 		radius 1
-		material red
+		material yellow
 	endsphere
 
 endgeometry

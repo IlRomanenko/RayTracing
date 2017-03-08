@@ -12,6 +12,9 @@
 
 #include <future>
 #include <thread>
+#include <queue>
+#include <mutex>
+
 using namespace std;
 
 class Scene {
@@ -24,10 +27,13 @@ class Scene {
 
     KD_Tree kd_tree;
 
-    vector<future<void>> workers;
+    vector<future<void> > workers;
+    queue<size_t> needToCalcPixels;
+    mutex workerMutex;
 
+
+    const size_t workerPixelsCount = 20;
     size_t width, height;
-
     float* pixels;
 
     Intersection castRay(const Ray& ray, IGeometryObject* skip = nullptr) {
@@ -101,26 +107,43 @@ class Scene {
 
         color = intersection.object->getMaterial()->getColor();
 
-        return color * min(lightIntensity + 0.5, 1.0);
+        return color * min(lightIntensity + 0.3, 1.0);
     }
 
-    void renderWorker(size_t firstPixel, size_t lastPixel) {
+    void getSomePixelsToRender(vector<size_t> &v) {
+        unique_lock<mutex> lock(workerMutex);
+
+        for (size_t i = 0; i < min(workerPixelsCount, needToCalcPixels.size()); i++) {
+            v.push_back(needToCalcPixels.front());
+            needToCalcPixels.pop();
+        }
+    }
+
+    void renderWorker() {
         size_t current_w, current_h;
 
         Vector base_w = viewport.getWidthBase() / width, base_h = viewport.getHeightBase() / height;
         Vector origin = viewport.getOrigin();
+        vector<size_t> pixelToRender;
 
+        getSomePixelsToRender(pixelToRender);
 
-        while (firstPixel != lastPixel) {
-            current_w = firstPixel / width;
-            current_h = firstPixel % width;
+        while (pixelToRender.size() > 0) {
 
-            Color clr = traceRay(LineFromTwoPoints(origin, viewport.getTopLeft() + base_w * current_w + base_h * current_h));
+            while (pixelToRender.size() > 0) {
+                size_t pixel = pixelToRender.back();
+                pixelToRender.pop_back();
 
-            pixels[firstPixel * 3] = (float)clr.r;
-            pixels[firstPixel * 3 + 1] = (float)clr.g;
-            pixels[firstPixel * 3 + 2] = (float)clr.b;
-            firstPixel++;
+                current_w = pixel / width;
+                current_h = pixel % width;
+
+                Color clr = traceRay(LineFromTwoPoints(origin, viewport.getTopLeft() + base_w * current_w + base_h * current_h));
+                pixels[pixel * 3] = (float)clr.r;
+                pixels[pixel * 3 + 1] = (float)clr.g;
+                pixels[pixel * 3 + 2] = (float)clr.b;
+            }
+
+            getSomePixelsToRender(pixelToRender);
         }
     }
 
@@ -140,10 +163,10 @@ public:
 
     void openScene(const string& filename, size_t width, size_t height) {
         {
-            ObjLoader rtFile("examples/obj_examples/scene.obj", "examples/obj_examples/", materialsFactory, viewport, lights, geometry);
+            ObjLoader rtFile("examples/obj_examples/buggy2.1.obj", "examples/obj_examples/", materialsFactory, viewport, lights, geometry);
         }
-        //clear();
-        //RT_file rtFile(filename, materialsFactory, viewport, lights, geometry);
+       // clear();
+       // RT_file rtFile(filename, materialsFactory, viewport, lights, geometry);
         this->width = width;
         this->height = height;
         pixels = new float[width * height * 3];
@@ -151,16 +174,18 @@ public:
     }
 
     void render(size_t numberOfThreads = 8) {
-
-
         //TODO change threads strategy
 
-        size_t part = width * height / numberOfThreads;
-        auto workerLambda = [&](size_t first, size_t last) {renderWorker(first, last); };
-        for (size_t i = 0; i < numberOfThreads - 1; i++) {
-            workers.emplace_back(async(std::launch::async, workerLambda, part * i, part * (i + 1)));
+        for (size_t i = 0; i < width * height; i++) {
+            needToCalcPixels.push(i);
         }
-        workers.emplace_back(async(std::launch::async, workerLambda, part * (numberOfThreads - 1), width * height));
+
+        size_t part = width * height / numberOfThreads;
+        auto workerLambda = [&]() { renderWorker(); };
+        for (size_t i = 0; i < numberOfThreads - 1; i++) {
+            workers.emplace_back(async(std::launch::async, workerLambda));
+        }
+        workers.emplace_back(async(std::launch::async, workerLambda));
     }
 
     bool isBusy() const {
@@ -189,5 +214,7 @@ public:
             th.get();
         }
     }
+
+
 };
 

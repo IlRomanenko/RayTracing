@@ -90,7 +90,9 @@ public:
               lights(lights),
               geometry(geometry) {
         parseFile(filename, directory);
-        lights.push_back(Light(Reference(1, 1), 1000, Point(7, 0, 7)));
-        viewport = Viewport(Vector(1000, 0, 0), Vector(10, -5, 5), Vector(10, 5, 5), Vector(10, -5, -5));
+        lights.push_back(Light(Reference(1, 1), 1000, Point(5, 205, 15)));
+        lights.push_back(Light(Reference(1, 1), 1000, Point(20, -25, 150)));
+        lights.push_back(Light(Reference(1, 1), 1000, Point(1000, 25, 3)));
+        viewport = Viewport(Vector(1000, 25, 3), Vector(20, -5, 15), Vector(20, 25, 15), Vector(20, -5, -15));
     }
 };
