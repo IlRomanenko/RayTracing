@@ -5,6 +5,8 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <array>
+using std::array;
 
 namespace geometry {
 
@@ -144,6 +146,10 @@ namespace geometry {
             );
         }
 
+        const array<ldb, 3> getCoordArray() const {
+            return {x, y, z};
+        }
+
         void normalize() {
             ldb len = length();
             x /= len;
@@ -153,33 +159,4 @@ namespace geometry {
     };
 
     typedef Vector Point;
-
-    struct Line {
-        Point begin;
-        Vector direction;
-
-        Line(Point begin, Point end) {
-            direction = end - begin;
-            direction.normalize();
-            this->begin = begin;
-        }
-
-        //use with any point
-        ldb getLineCoef(const Point &point) const {
-            return (point - begin) * direction;
-        }
-
-        //use with any point
-        ldb distance(const Point &point) const {
-            Point npoint = point - begin;
-            return (npoint - direction * (direction * npoint)).length();
-        }
-    };
-
-    typedef Line Ray;
-
-    static Line LineFromTwoPoints(Point begin, Point end) {
-        return Line(begin, end);
-    }
-
 }

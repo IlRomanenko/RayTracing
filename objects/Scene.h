@@ -8,6 +8,7 @@
 #include "../parsers/RT_file.h"
 #include "Viewport.h"
 #include "../parsers/ObjLoader.h"
+#include "../ray-casting/KD_Tree.h"
 
 #include <future>
 #include <thread>
@@ -20,38 +21,18 @@ class Scene {
     vector<Light> lights;
     Viewport viewport;
 
+
+    KD_Tree kd_tree;
+
     vector<future<void>> workers;
 
     size_t width, height;
 
     float* pixels;
 
-    struct Intersection {
-        ldb rayIntersectionCoef;
-        Point intersectionPoint;
-        IGeometryObject* object;
-
-        bool has_intersection;
-
-        Intersection() {
-            object = nullptr;
-            rayIntersectionCoef = 0;
-            intersectionPoint = 0;
-            has_intersection = false;
-        }
-
-        operator bool() {
-            return has_intersection;
-        }
-
-        bool operator ! () {
-            return !has_intersection;
-        }
-    };
-
     Intersection castRay(const Ray& ray, IGeometryObject* skip = nullptr) {
 
-        Intersection intersection;
+        /*Intersection intersection;
         RayCoefIntersection rayIntersection;
 
         ldb last_point = 1e30, current_point;
@@ -79,13 +60,18 @@ class Scene {
         intersection.rayIntersectionCoef = last_point;
         intersection.intersectionPoint = ray.begin + ray.direction * last_point;
 
-        return intersection;
+        return intersection;*/
+        return kd_tree.castRay(ray);
+    }
+
+    Intersection castRayKD(const Ray& ray, IGeometryObject* skip = nullptr) {
+        return kd_tree.castRay(ray);
     }
 
     Color traceRay(const Ray &ray) {
         Color color(0, 0, 0);
 
-        Intersection intersection = castRay(ray);
+        Intersection intersection = castRayKD(ray);
 
         if (!intersection) {
             return color;
@@ -115,7 +101,7 @@ class Scene {
 
         color = intersection.object->getMaterial()->getColor();
 
-        return color * min(lightIntensity + 0.2, 1.0);
+        return color * min(lightIntensity + 0.5, 1.0);
     }
 
     void renderWorker(size_t firstPixel, size_t lastPixel) {
@@ -149,20 +135,26 @@ public:
         this->width = width;
         this->height = height;
         pixels = new float[width * height * 3];
+        kd_tree.buildTree(geometry);
     }
 
     void openScene(const string& filename, size_t width, size_t height) {
         {
             ObjLoader rtFile("examples/obj_examples/scene.obj", "examples/obj_examples/", materialsFactory, viewport, lights, geometry);
         }
-        /*clear();
-        RT_file rtFile(filename, materialsFactory, viewport, lights, geometry);*/
+        //clear();
+        //RT_file rtFile(filename, materialsFactory, viewport, lights, geometry);
         this->width = width;
         this->height = height;
         pixels = new float[width * height * 3];
+        kd_tree.buildTree(geometry);
     }
 
-    void render(size_t numberOfThreads = 16) {
+    void render(size_t numberOfThreads = 8) {
+
+
+        //TODO change threads strategy
+
         size_t part = width * height / numberOfThreads;
         auto workerLambda = [&](size_t first, size_t last) {renderWorker(first, last); };
         for (size_t i = 0; i < numberOfThreads - 1; i++) {

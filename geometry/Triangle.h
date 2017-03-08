@@ -4,10 +4,8 @@
 #pragma once
 
 #include <array>
-#include "IGeometryObject.h"
 #include "Polygon.h"
 
-#include <cassert>
 class Triangle : public Polygon<3> {
 
 public:

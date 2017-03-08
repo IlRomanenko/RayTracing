@@ -4,8 +4,10 @@
 #pragma once
 
 #include "Primitives.h"
+#include "BoundingBox.h"
+#include "Ray.h"
+
 #include "../objects/Material.h"
-#include "Intersection.h"
 
 using namespace geometry;
 
@@ -24,7 +26,13 @@ public:
         return material;
     }
 
+    virtual BoundingBox getBoundingBox() const = 0;
+
     virtual RayCoefIntersection intersect(const Ray &ray) const = 0;
+
+    virtual int getTag() const {
+        return 0;
+    }
 
     virtual ~IGeometryObject() {
         if (material != nullptr) {

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <GL/freeglut.h>
+#include "base_headers.h"
 #include "objects/Scene.h"
 #include "geometry/BoundingBox.h"
 
@@ -30,6 +31,8 @@ void render() {
         glVertex2d(-1, 1);
     }
     glEnd();
+
+    glRasterPos2d(0, 0);
 
     glutSwapBuffers();
 }
@@ -88,7 +91,7 @@ void tempTest() {
     for (int i = 0; i < 3; i++) {
         points.push_back(Vector(i, i, i));
     }
-    BoundingBox box(Triangle(points, nullptr));
+    BoundingBox box(points.begin(), points.end());
 
 }
 

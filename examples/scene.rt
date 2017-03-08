@@ -1,8 +1,8 @@
 viewport
-    origin -1000 0. 0.
-    topleft -10. 10. -10. # Верхний-левый угол экрана
-    bottomleft -10. -10. -10 # Нижний-левый угол экрана
-    topright -10. 10. 10. # Верхний-правый угол экрана
+    origin 30 0. 0.
+    topleft 10. 10. -10. # Верхний-левый угол экрана
+    bottomleft 10. -10. -10 # Нижний-левый угол экрана
+    topright 10. 10. 10. # Верхний-правый угол экрана
 endviewport
 
 materials
@@ -34,50 +34,16 @@ lights
     # Описание одного источника света
     point
         # Координаты
-        coords -10 0 0
+        coords 17 0 0
         # Мощность
         power 500
     endpoint
 
 
-      # Описание нормировочных коэффициентов
-        reference
-            # Мощность эталонного источника
-            power 1
-            # Расстояние от него до эталонной плоскости
-            distance 1
-        endreference
-        # Описание одного источника света
-        point
-            # Координаты
-            coords 100 0 0
-            # Мощность
-            power 500
-        endpoint
-
-
-          # Описание нормировочных коэффициентов
-            reference
-                # Мощность эталонного источника
-                power 1
-                # Расстояние от него до эталонной плоскости
-                distance 1
-            endreference
-            # Описание одного источника света
-            point
-                # Координаты
-                coords 0 0 100
-                # Мощность
-                power 500
-            endpoint
 endlights
 
 geometry
-	sphere
-		coords 500 -1 -1
-		radius 3
-		material red
-	endsphere
+
 
     triangle
         vertex 1 0 0
@@ -92,4 +58,17 @@ geometry
         vertex 4 2 5
         material yellow
     endtriangle
+
+    sphere
+		coords 3 3 3
+		radius 1
+		material red
+	endsphere
+
+	sphere
+		coords 3 -0 0
+		radius 1
+		material red
+	endsphere
+
 endgeometry

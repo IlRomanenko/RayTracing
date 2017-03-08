@@ -5,8 +5,8 @@
 
 #include "IGeometryObject.h"
 
-template <int pointsSize>
-class Polygon : public IGeometryObject{
+template<int pointsSize>
+class Polygon : public IGeometryObject {
 protected:
     std::array<Point, pointsSize> points;
 
@@ -64,5 +64,9 @@ public:
         }
 
         return RayCoefIntersection(t);
+    }
+
+    BoundingBox getBoundingBox() const override {
+        return {points.begin(), points.end()};
     }
 };
