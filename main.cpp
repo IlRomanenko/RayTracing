@@ -2,11 +2,14 @@
 #include <GL/freeglut.h>
 #include "base_headers.h"
 #include "objects/Scene.h"
-#include "geometry/BoundingBox.h"
 
-Scene scene;
+
+#include "KD_tree_test.h"
+
+Scene<RT_file> scene;
 const size_t width = 600, height = 600;
 const float* pixels;
+int currentWindow;
 GLuint textureID;
 
 void render() {
@@ -59,7 +62,9 @@ void glInit() {
 
 void initRayCasting() {
 
-    scene.openScene("examples/scene.rt", width, height);
+    //scene.openScene("examples/obj_examples/scene.obj", "examples/obj_examples/", width, height);
+    scene.openScene("examples/scene.rt", "examples/obj_examples/", width, height);
+
     scene.render();
 
     pixels = scene.getPixels();
@@ -79,7 +84,7 @@ void initRayCasting() {
 }
 
 void timer_redisplay(int) {
-    glutPostRedisplay();
+    glutPostWindowRedisplay(currentWindow);
     if (scene.isBusy()) {
         glutTimerFunc(16, timer_redisplay, 0);
     }
@@ -97,11 +102,14 @@ void tempTest() {
 
 int main(int argc, char** argv) {
 
+    //kd_tree_test::MainTest(argc, argv);
+    //thread([&](){kd_tree_test::MainTest(argc, argv);}).join();
+
 
     glutInit(&argc, argv);
     glutInitWindowSize(1000, 1000);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-    glutCreateWindow("Ray-tracing by Ilya Romanenko");
+    currentWindow = glutCreateWindow("Ray-tracing by Ilya Romanenko");
 
 
     glInit();

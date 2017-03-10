@@ -1,8 +1,8 @@
 viewport
-    origin 1000 0. 0.
-    topleft 100. 100. -100. # Верхний-левый угол экрана
-    bottomleft 100. -100. -100 # Нижний-левый угол экрана
-    topright 100. 100. 100. # Верхний-правый угол экрана
+    origin 0 1000000. 0.
+    topleft -0. -10. -10. # Верхний-левый угол экрана
+    bottomleft 20. -10. -10 # Нижний-левый угол экрана
+    topright -0. -10. 10. # Верхний-правый угол экрана
 endviewport
 
 materials
@@ -34,7 +34,7 @@ lights
     # Описание одного источника света
     point
         # Координаты
-        coords 17 0 0
+        coords 30 0 0
         # Мощность
         power 500
     endpoint
@@ -51,7 +51,7 @@ geometry
 	endsphere
 
 	sphere
-		coords 15 -0 0
+		coords 15 1 0
 		radius 1
 		material yellow
 	endsphere

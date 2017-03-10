@@ -9,6 +9,7 @@
 #include "Viewport.h"
 #include "../parsers/ObjLoader.h"
 #include "../ray-casting/KD_Tree.h"
+#include "../utilities/ThreadPool.h"
 
 #include <future>
 #include <thread>
@@ -17,6 +18,7 @@
 
 using namespace std;
 
+template <typename SceneParser>
 class Scene {
 
     MaterialsFactory materialsFactory;
@@ -26,6 +28,8 @@ class Scene {
 
 
     KD_Tree kd_tree;
+
+    ThreadPool<void> threadPool;
 
     vector<future<void> > workers;
     queue<size_t> needToCalcPixels;
@@ -80,7 +84,7 @@ class Scene {
         Intersection intersection = castRayKD(ray);
 
         if (!intersection) {
-            return color;
+            return Color(28, 28, 28);
         }
 
         ldb lightIntensity = 0;
@@ -107,7 +111,7 @@ class Scene {
 
         color = intersection.object->getMaterial()->getColor();
 
-        return color * min(lightIntensity + 0.3, 1.0);
+        return color * min(lightIntensity + 0.2, 1.0);
     }
 
     void getSomePixelsToRender(vector<size_t> &v) {
@@ -147,30 +151,29 @@ class Scene {
         }
     }
 
+    ISceneParser* createSceneParser() {
+        return new SceneParser(materialsFactory, viewport, lights, geometry);
+    }
+
 public:
 
     Scene() {
         width = height = 0;
     }
 
-    Scene(const string& filename, size_t width, size_t height) {
-        RT_file rtFile(filename, materialsFactory, viewport, lights, geometry);
-        this->width = width;
-        this->height = height;
-        pixels = new float[width * height * 3];
-        kd_tree.buildTree(geometry);
-    }
+    void openScene(const string& filename, const string& directory,
+                   size_t width, size_t height,
+                   size_t numberOfThreads = 8) {
 
-    void openScene(const string& filename, size_t width, size_t height) {
-        {
-            ObjLoader rtFile("examples/obj_examples/buggy2.1.obj", "examples/obj_examples/", materialsFactory, viewport, lights, geometry);
-        }
-       // clear();
-       // RT_file rtFile(filename, materialsFactory, viewport, lights, geometry);
+        clear();
+        ISceneParser *parser = createSceneParser();
+        parser->openScene(filename, directory);
+        delete parser;
+
         this->width = width;
         this->height = height;
         pixels = new float[width * height * 3];
-        kd_tree.buildTree(geometry);
+        kd_tree.buildTree(geometry, numberOfThreads);
     }
 
     void render(size_t numberOfThreads = 8) {
@@ -182,10 +185,9 @@ public:
 
         size_t part = width * height / numberOfThreads;
         auto workerLambda = [&]() { renderWorker(); };
-        for (size_t i = 0; i < numberOfThreads - 1; i++) {
+        for (size_t i = 0; i < numberOfThreads; i++) {
             workers.emplace_back(async(std::launch::async, workerLambda));
         }
-        workers.emplace_back(async(std::launch::async, workerLambda));
     }
 
     bool isBusy() const {

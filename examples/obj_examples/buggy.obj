@@ -1,6 +1,6 @@
-# Blender v2.78 (sub 0) OBJ File: 'buggy2.1.blend'
+# Blender v2.78 (sub 0) OBJ File: 'buggy.blend'
 # www.blender.org
-mtllib buggy2.1.mtl
+mtllib buggy.mtl
 o rims_Cylinder.003
 v 5.456226 3.162760 -8.221533
 v 5.456226 3.402162 -8.173912

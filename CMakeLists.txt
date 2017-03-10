@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.6)
 project(Ray_Tracing)
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS "-lGL -lglut -pthread -g -O0 -lGLU")
+set(CMAKE_CXX_FLAGS "-lGL -lglut -pthread -g -O0 -lGLU -lX11")
 
 set(SOURCE_FILES
         main.cpp
@@ -26,8 +26,9 @@ set(SOURCE_FILES
         parsers/ObjLoader.h
         ray-casting/RayCaster.h
         ray-casting/KD_Tree.h
-        #KD_tree_test.cpp
-        )
+        KD_tree_test.h
+        parsers/ISceneParser.h
+        utilities/ThreadPool.h)
 
 
 add_executable(Ray_Tracing ${SOURCE_FILES})

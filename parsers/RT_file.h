@@ -15,10 +15,11 @@
 #include "../geometry/Sphere.h"
 #include "../geometry/Triangle.h"
 #include "../geometry/Quadrangle.h"
+#include "ISceneParser.h"
 
 using namespace geometry;
 
-class RT_file {
+class RT_file : public ISceneParser {
 
     class FileScanner {
         ifstream file;
@@ -100,11 +101,6 @@ class RT_file {
             return std::move(Vector(x, y, z));
         }
     };
-
-    MaterialsFactory &materialsFactory;
-    Viewport &viewport;
-    vector<Light> &lights;
-    vector<IGeometryObject *> &geometry;
 
     void checkEofScanner(FileScanner &scanner, const string &group) {
         if (scanner.eof()) {
@@ -439,15 +435,13 @@ class RT_file {
 public:
     RT_file() = delete;
 
-    RT_file(const string &filename,
-            MaterialsFactory &factory,
+    RT_file(MaterialsFactory &factory,
             Viewport &viewport,
             vector<Light> &lights,
             vector<IGeometryObject *> &geometry)
-            : materialsFactory(factory),
-              viewport(viewport),
-              lights(lights),
-              geometry(geometry) {
+            : ISceneParser(factory, viewport, lights, geometry) {}
+
+    void openScene(const string &filename, const string &directory) override {
         parseFile(filename);
     }
 

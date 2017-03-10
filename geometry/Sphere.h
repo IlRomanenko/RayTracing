@@ -7,7 +7,7 @@
 
 class Sphere : public IGeometryObject {
 
-    Point position;
+    Point center;
     ldb radius;
 
 
@@ -17,13 +17,13 @@ public:
 
     Sphere(Point position, ldb radius, Material *material) {
         this->material = material;
-        this->position = position;
+        this->center = position;
         this->radius = radius;
     }
 
     Vector getNormal(Point point) const override {
-        assert(Double::lessEqual((point - position).length(), radius));
-        Vector norm = point - position;
+        assert(Double::lessEqual((point - center).length(), radius));
+        Vector norm = point - center;
         norm.normalize();
         return norm;
     }
@@ -31,13 +31,13 @@ public:
     RayCoefIntersection intersect(const Ray &ray) const override {
 
 
-        ldb distance = ray.distance(position);
+        ldb distance = ray.distance(center);
 
         if (Double::greater(distance, radius)) {
             return RayCoefIntersection();
         }
 
-        ldb scalar_distance = ray.getLineCoef(position);
+        ldb scalar_distance = ray.getLineCoef(center);
         ldb half_sphere_distance = sqrt(abs(radius * radius - distance * distance));
         ldb ray_d = min(scalar_distance - half_sphere_distance, scalar_distance + half_sphere_distance);
 
@@ -49,7 +49,7 @@ public:
     }
 
     BoundingBox getBoundingBox() const override {
-        return BoundingBox(position, radius, radius, radius);
+        return BoundingBox(center, radius, radius, radius);
     }
 
     ldb getRadius() {
@@ -57,6 +57,6 @@ public:
     }
 
     Vector getPosition() {
-        return position;
+        return center;
     }
 };

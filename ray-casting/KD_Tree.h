@@ -2,10 +2,14 @@
 // Created by ilya on 06.03.17.
 //
 #pragma once
+#include <climits>
 
 #include "../base_headers.h"
 #include "../geometry/IGeometryObject.h"
 #include "../geometry/BoundingBox.h"
+
+#include "../utilities/ThreadPool.h"
+
 
 class KD_Tree {
 
@@ -14,7 +18,6 @@ public:
     struct KD_tree_leaf {
         vector<IGeometryObject *> objects;
     };
-
 
     struct KD_tree_node {
         KD_tree_node *left, *right;
@@ -59,14 +62,11 @@ public:
             value = 0;
             axis = 0;
             type = SplitType::LEFT;
-            cost = 1e30;
+            cost = INFINITY;
         }
 
 
     };
-
-    const ldb traversalCoef = 1, intersectionCoef = 10;
-
 
     const BoundingBox getBoundingBox(const vector<IGeometryObject *> &objects) const {
         BoundingBox result = objects[0]->getBoundingBox();
@@ -78,11 +78,7 @@ public:
 
 
     ldb costFunction(ldb leftProbability, size_t leftSize, ldb rightProbability, size_t rightSize) const {
-        ldb coef = 1;
-        if (leftSize == 0 || rightSize == 0) {
-            coef = 0.8;
-        }
-        return coef * (traversalCoef + intersectionCoef * (leftProbability * leftSize + rightProbability * rightSize));
+        return traversalCoef + intersectionCoef * (leftProbability * leftSize + rightProbability * rightSize);
     }
 
 
@@ -92,9 +88,11 @@ public:
                                                                 size_t rightSize) const {
         array<BoundingBox, 2> boxes = voxel.split(axisNumber, planeCoord);
 
-        ldb voxelSA = voxel.calculateSurfaceArea();
-        ldb leftProb = boxes[0].calculateSurfaceArea() / voxelSA, rightProb =
-                boxes[1].calculateSurfaceArea() / voxelSA;
+        ldb leftProb = boxes[0].calculateSurfaceArea(), rightProb = boxes[1].calculateSurfaceArea(), fullProb =
+                leftProb + rightProb;
+
+        leftProb /= voxel.calculateSurfaceArea();
+        rightProb /= voxel.calculateSurfaceArea();
 
         ldb leftPartCost = costFunction(leftProb, leftSize + middleSize, rightProb, rightSize);
         ldb rightPartCost = costFunction(leftProb, leftSize, rightProb, middleSize + rightSize);
@@ -104,10 +102,12 @@ public:
         if (Double::greater(leftPartCost, rightPartCost)) {
             result = make_pair(rightPartCost, BoundingBoxSplit::SplitType::RIGHT);
         }
-/*
-        if (leftSize + rightSize == 0) {
-            result.first = 1e30;
-        }*/
+
+        //TODO maybe it isn't needed
+
+        if (Double::equal(leftProb, 0) || Double::equal(rightProb, 0)) {
+            result.first = INFINITY;
+        }
         return result;
     }
 
@@ -116,6 +116,7 @@ public:
                                                  const BoundingBox &left,
                                                  const BoundingBox &right,
                                                  BoundingBoxSplit bboxSplit) {
+        //TODO change classify strategy!!!
 
         vector<IGeometryObject *> leftPart, rightPart;
 
@@ -131,10 +132,10 @@ public:
                 }
 
             } else {
-                if (Double::lessEqual(bbox.getMin(bboxSplit.axis), bboxSplit.value)) {
+                if (Double::less(bbox.getMin(bboxSplit.axis), bboxSplit.value)) {
                     leftPart.push_back(obj);
                 }
-                if (Double::lessEqual(bboxSplit.value, bbox.getMax(bboxSplit.axis))) {
+                if (Double::less(bboxSplit.value, bbox.getMax(bboxSplit.axis))) {
                     rightPart.push_back(obj);
                 }
             }
@@ -163,10 +164,11 @@ public:
 
     BoundingBoxSplit findPlane(const vector<IGeometryObject *> &objects, const BoundingBox &boundingBox) {
         BoundingBoxSplit boundingBoxPlaneSplit;
-        ldb minCost = 1e30;
+        ldb minCost = INFINITY;
 
         vector<IntersectionEvent> events;
         for (size_t dim = 0; dim < 3; dim++) {
+
             events.clear();
             for (const auto &obj : objects) {
                 const auto &bbox = obj->getBoundingBox();
@@ -210,7 +212,8 @@ public:
                 middleSize = p_belong;
                 rightSize -= p_belong + p_end;
 
-                const auto &currentResult = surfaceAreaHeuristic(currentPlaneValue, dim, boundingBox,
+                const auto &currentResult = surfaceAreaHeuristic(currentPlaneValue, dim,
+                                                                 boundingBox,
                                                                  leftSize, middleSize, rightSize);
 
                 if (Double::less(currentResult.first, minCost)) {
@@ -220,35 +223,39 @@ public:
                     boundingBoxPlaneSplit.type = currentResult.second;
                     boundingBoxPlaneSplit.cost = minCost;
                 }
-                leftSize += p_begin + p_belong;
+                leftSize += p_belong + p_begin;
+
             }
         }
         return boundingBoxPlaneSplit;
     }
 
-
-    pnode recBuild(const vector<IGeometryObject *> &objects, const BoundingBox &boundingBox, size_t depth = 0) {
+    pnode recBuild(const vector<IGeometryObject *> &objects, const BoundingBox &boundingBox) {
         pnode node = new KD_tree_node();
         node->boundingBox = boundingBox;
+        node->nodeSize = objects.size();
 
         const auto &split = findPlane(objects, boundingBox);
-        if (Double::greater(split.cost, objects.size() * intersectionCoef) || depth == 7) {
+
+        if (Double::greaterEqual(split.cost, objects.size() * intersectionCoef)) {
             node->isLeaf = new KD_tree_leaf();
             node->isLeaf->objects = objects;
-            //TODO do something
             return node;
         }
 
         const auto &boxes = boundingBox.split(split.axis, split.value);
-
         const auto &parts = classify(objects, boxes[0], boxes[1], split);
 
         node->splitPlane = make_pair(split.value, split.axis);
-        node->nodeSize = objects.size();
 
-        node->left = recBuild(parts[0], boxes[0], depth + 1);
-        node->right = recBuild(parts[1], boxes[1], depth + 1);
+        auto leftPart = bind(buildLambda, parts[0], boxes[0]);
+        auto rightPart = bind(buildLambda, parts[1], boxes[1]);
 
+        auto futureLeft = pool->submit(move(leftPart));
+
+        node->right = rightPart();
+        pool->wait(move(futureLeft));
+        node->left = futureLeft.get();
         return node;
     }
 
@@ -270,13 +277,13 @@ public:
 
     Intersection findIntersection(pnode node, const Ray &ray, const array<ldb, 2> coefs) {
 
-        if (!node->boundingBox.intersect(ray).first) {
+        if (node->nodeSize == 0 || !node->boundingBox.intersect(ray).first) {
             return Intersection();
         }
 
         if (node->isLeaf != nullptr) {
             Intersection intersection;
-            ldb intersectionCoef = 1e30;
+            ldb intersectionCoef = INFINITY;
 
             for (const auto &obj : node->isLeaf->objects) {
                 auto coef_inters = obj->intersect(ray);
@@ -335,25 +342,30 @@ public:
         return right;
     }
 
-    pnode root;
-
 public:
 
     KD_Tree() {
         root = nullptr;
+        pool = nullptr;
     }
 
-    KD_Tree(vector<IGeometryObject *>
-            objects) {
+    KD_Tree(vector<IGeometryObject *> objects, size_t numberOfThreads = 8) {
         root = nullptr;
-        buildTree(objects);
+        pool = nullptr;
+        buildTree(objects, numberOfThreads);
     }
 
-    void buildTree(vector<IGeometryObject *> objects) {
+    void buildTree(vector<IGeometryObject *> objects, size_t numberOfThreads = 8) {
         if (root != nullptr) {
             delete root;
+            delete pool;
         }
-        root = recBuild(objects, getBoundingBox(objects));
+        pool = new ThreadPool<pnode>(numberOfThreads - 1);
+        auto result = pool->submit(bind(buildLambda, objects, getBoundingBox(objects)));
+        pool->wait(move(result));
+        root = result.get();
+        pool->shutdown();
+        delete pool;
     }
 
     Intersection castRay(const Ray &ray) {
@@ -370,6 +382,23 @@ public:
         delete root;
     }
 
+
+public:
+
+    const ldb traversalCoef = 2, intersectionCoef = 0.5;
+
+    static const ldb INFINITY;
+
+    pnode root;
+
+    ThreadPool<pnode> *pool;
+
+    const function<pnode(const vector<IGeometryObject*> &, const BoundingBox&)> buildLambda =
+            [&](const vector<IGeometryObject *> &cur_objects, const BoundingBox &boundingBox) {
+        return recBuild(cur_objects, boundingBox);
+    };
 };
 
-
+const ldb KD_Tree::__builtin_inff() {
+    return std::numeric_limits<double>::max();
+}

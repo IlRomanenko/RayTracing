@@ -15,16 +15,11 @@
 #include "../geometry/Sphere.h"
 #include "../geometry/Triangle.h"
 #include "../geometry/Quadrangle.h"
+#include "ISceneParser.h"
 
 using namespace geometry;
 
-class ObjLoader {
-
-    MaterialsFactory &materialsFactory;
-    Viewport &viewport;
-    vector<Light> &lights;
-    vector<IGeometryObject *> &geometry;
-
+class ObjLoader : public ISceneParser {
 
     void parseFile(const string &filename, const string &directory) {
         tinyobj::attrib_t attrib;
@@ -38,7 +33,7 @@ class ObjLoader {
             throw exception();
         }
 
-        vector<Material*> currentMaterials;
+        vector<Material *> currentMaterials;
         for (size_t i = 0; i < materials.size(); i++) {
             Color clr(materials[i].diffuse);
             currentMaterials.push_back(materialsFactory.constructMaterial(
@@ -77,18 +72,14 @@ class ObjLoader {
     }
 
 public:
-    ObjLoader() = delete;
 
-    ObjLoader(const string &filename,
-              const string &directory,
-              MaterialsFactory &factory,
+    ObjLoader(MaterialsFactory &factory,
               Viewport &viewport,
               vector<Light> &lights,
               vector<IGeometryObject *> &geometry)
-            : materialsFactory(factory),
-              viewport(viewport),
-              lights(lights),
-              geometry(geometry) {
+            : ISceneParser(factory, viewport, lights, geometry) { }
+
+    void openScene(const string &filename, const string &directory) {
         parseFile(filename, directory);
         lights.push_back(Light(Reference(1, 1), 1000, Point(5, 205, 15)));
         lights.push_back(Light(Reference(1, 1), 1000, Point(20, -25, 150)));
