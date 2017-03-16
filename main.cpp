@@ -1,12 +1,13 @@
 #include <iostream>
 #include <GL/freeglut.h>
 #include "base_headers.h"
-#include "objects/Scene.h"
+#include "scene/Scene.h"
 
 
 #include "KD_tree_test.h"
+#include "parsers/MyParser.h"
 
-Scene<RT_file> scene;
+Scene<MyParser> scene;
 const size_t width = 600, height = 600;
 const float* pixels;
 int currentWindow;
@@ -62,8 +63,9 @@ void glInit() {
 
 void initRayCasting() {
 
-    //scene.openScene("examples/obj_examples/scene.obj", "examples/obj_examples/", width, height);
-    scene.openScene("examples/scene.rt", "examples/obj_examples/", width, height);
+    //scene.openScene("examples/obj_examples/buggy.obj", "examples/obj_examples/", width, height);
+    //scene.openScene("examples/scene.rt", "examples/obj_examples/", width, height);
+    scene.openScene("refract.irt", "examples/", width, height);
 
     scene.render();
 
@@ -85,9 +87,9 @@ void initRayCasting() {
 
 void timer_redisplay(int) {
     glutPostWindowRedisplay(currentWindow);
-    if (scene.isBusy()) {
+    //if (scene.isBusy()) {
         glutTimerFunc(16, timer_redisplay, 0);
-    }
+    //}
 }
 
 void tempTest() {
@@ -98,6 +100,18 @@ void tempTest() {
     }
     BoundingBox box(points.begin(), points.end());
 
+}
+
+void keyboard(unsigned char chr, int x, int y) {
+    if (chr == ' ') {
+        scene.antialiasing();
+        glutTimerFunc(16, timer_redisplay, 0);
+    } else if (chr == '\r') {
+        scene.openScene("orientation.irt", "examples/", width, height);
+        scene.render();
+        //pixels = scene.getPixels();
+        glutTimerFunc(16, timer_redisplay, 0);
+    }
 }
 
 int main(int argc, char** argv) {
@@ -121,6 +135,7 @@ int main(int argc, char** argv) {
     glutReshapeFunc(reshapeEvent);
     glutTimerFunc(100, timer_redisplay, 0);
     glutDisplayFunc(render);
+    glutKeyboardFunc(keyboard);
     glutMainLoop();
 
     return 0;

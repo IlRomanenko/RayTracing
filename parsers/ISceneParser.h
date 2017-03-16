@@ -4,8 +4,8 @@
 #pragma once
 
 #include "../geometry/IGeometryObject.h"
-#include "../objects/Light.h"
-#include "../objects/Viewport.h"
+#include "../scene/Light.h"
+#include "../scene/Viewport.h"
 
 class ISceneParser {
 

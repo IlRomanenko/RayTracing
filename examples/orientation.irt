@@ -1,0 +1,25 @@
+ObjFile
+    Name    orientation.obj
+    Directory   obj_examples/
+EndObjFile
+
+Viewport
+       Origin      100 100 -100
+       UpNormal    0 -1 0
+       LookAt      0 0 0
+       Width       10
+       Height      10
+       Distance    100    # distance from origin to viewport
+EndViewport
+
+lights
+#5
+    reference
+        power 1
+        distance 1
+    endreference
+    point
+        coords 3 3 -3
+        power 500
+    endpoint
+endlights

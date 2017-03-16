@@ -7,7 +7,7 @@
 #include "BoundingBox.h"
 #include "Ray.h"
 
-#include "../objects/Material.h"
+#include "../scene/Material.h"
 
 using namespace geometry;
 

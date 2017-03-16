@@ -8,9 +8,9 @@
 
 #include "tinyobjloader/tiny_obj_loader.h"
 
-#include "../objects/Material.h"
-#include "../objects/Viewport.h"
-#include "../objects/Light.h"
+#include "../scene/Material.h"
+#include "../scene/Viewport.h"
+#include "../scene/Light.h"
 #include "../geometry/IGeometryObject.h"
 #include "../geometry/Sphere.h"
 #include "../geometry/Triangle.h"
@@ -41,7 +41,7 @@ class ObjLoader : public ISceneParser {
                     clr,
                     materials[i].dissolve,
                     materials[i].ambient[0],
-                    0));
+                    materials[i].ambient[0]));
         }
 
         for (size_t s = 0; s < shapes.size(); s++) {
@@ -64,9 +64,6 @@ class ObjLoader : public ISceneParser {
                 geometry.push_back(new Triangle(points, currentMaterials[shapes[s].mesh.material_ids[f]]));
 
                 index_offset += fv;
-
-                // per-face material
-                shapes[s].mesh.material_ids[f];
             }
         }
     }
@@ -80,10 +77,6 @@ public:
             : ISceneParser(factory, viewport, lights, geometry) { }
 
     void openScene(const string &filename, const string &directory) {
-        parseFile(filename, directory);
-        lights.push_back(Light(Reference(1, 1), 1000, Point(5, 205, 15)));
-        lights.push_back(Light(Reference(1, 1), 1000, Point(20, -25, 150)));
-        lights.push_back(Light(Reference(1, 1), 1000, Point(1000, 25, 3)));
-        viewport = Viewport(Vector(1000, 25, 3), Vector(20, -5, 15), Vector(20, 25, 15), Vector(20, -5, -15));
+        parseFile(directory + filename, directory);
     }
 };

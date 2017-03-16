@@ -301,35 +301,6 @@ public:
             return intersection;
         }
 
-/*
-        pair<bool, ldb> planeCoef = getPlaneSplitCoef(node, ray);
-
-        if (!planeCoef.first) {
-
-            Intersection left = findIntersection(node->left, ray, coefs);
-            Intersection right = findIntersection(node->right, ray, coefs);;
-            if (left) {
-                if (right && Double::greater(left.rayIntersectionCoef, right.rayIntersectionCoef) &&
-                    Double::greater(right.rayIntersectionCoef, 0)) {
-                    return right;
-                }
-                return left;
-            }
-            return right;
-        }
-
-        if (Double::less(coefs[1], planeCoef.second)) {
-            Point outPoint = ray.begin + ray.direction * coefs[1];
-            pnode part = node->left->boundingBox.contains(outPoint) ? node->left : node->right;
-            return findIntersection(part, ray, coefs);
-
-        } else if (Double::less(planeCoef.second, coefs[0])) {
-
-            Point inPoint = ray.begin + ray.direction * coefs[0];
-            pnode part = node->left->boundingBox.contains(inPoint) ? node->left : node->right;
-            return findIntersection(part, ray, coefs);
-        }
-*/
         Intersection left = findIntersection(node->left, ray, coefs);
         Intersection right = findIntersection(node->right, ray, coefs);
         if (left) {
@@ -349,13 +320,13 @@ public:
         pool = nullptr;
     }
 
-    KD_Tree(vector<IGeometryObject *> objects, size_t numberOfThreads = 8) {
+    KD_Tree(const vector<IGeometryObject *> &objects, size_t numberOfThreads = 8) {
         root = nullptr;
         pool = nullptr;
         buildTree(objects, numberOfThreads);
     }
 
-    void buildTree(vector<IGeometryObject *> objects, size_t numberOfThreads = 8) {
+    void buildTree(const vector<IGeometryObject *> &objects, size_t numberOfThreads = 8) {
         if (root != nullptr) {
             delete root;
             delete pool;

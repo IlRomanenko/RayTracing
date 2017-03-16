@@ -1,9 +1,10 @@
 #include <iostream>
 #include <GL/freeglut.h>
 #include "base_headers.h"
-#include "objects/Scene.h"
+#include "scene/Scene.h"
 #include "ray-casting/KD_Tree.h"
 #include <X11/Xlib.h>
+#include <cstring>
 
 namespace kd_tree_test {
 

@@ -65,6 +65,7 @@ struct Intersection {
     ldb rayIntersectionCoef;
     Point intersectionPoint;
     IGeometryObject* object;
+    Color color;
 
     bool has_intersection;
 

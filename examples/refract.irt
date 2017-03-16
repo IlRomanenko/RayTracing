@@ -1,0 +1,24 @@
+ObjFile
+    Name    refract.obj
+    Directory   obj_examples/
+EndObjFile
+
+Viewport
+       Origin      100 100 20
+       UpNormal    0 -1 0
+       LookAt      0 0 0
+       Width       10
+       Height      10
+       Distance    140    # distance from origin to viewport
+EndViewport
+
+lights
+    reference
+        power 1
+        distance 1
+    endreference
+    point
+        coords 1 2 -1.2
+        power 3
+    endpoint
+endlights

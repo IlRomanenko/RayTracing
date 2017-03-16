@@ -4,104 +4,22 @@
 #pragma once
 
 #include "../base_headers.h"
-#include <boost/algorithm/string.hpp>
-#include <exception>
-#include <sstream>
+#include "ISceneParser.h"
+#include "Scanners.h"
 
-#include "../objects/Material.h"
-#include "../objects/Viewport.h"
-#include "../objects/Light.h"
+#include "../scene/Material.h"
+#include "../scene/Viewport.h"
+#include "../scene/Light.h"
 #include "../geometry/IGeometryObject.h"
 #include "../geometry/Sphere.h"
 #include "../geometry/Triangle.h"
 #include "../geometry/Quadrangle.h"
-#include "ISceneParser.h"
 
 using namespace geometry;
 
 class RT_file : public ISceneParser {
 
-    class FileScanner {
-        ifstream file;
-
-    public:
-        FileScanner(const string &filename) {
-            FILE *c_file;
-            if ((c_file = fopen(filename.c_str(), "r")) == nullptr) {
-                fprintf(stderr, "Error with file open");
-                throw exception();
-            }
-            fclose(c_file);
-            file.open(filename, ios_base::in);
-        }
-
-        bool eof() const {
-            return file.eof();
-        }
-
-        string nextLine() {
-            string line;
-            while (!file.eof()) {
-                getline(file, line);
-                boost::trim(line);
-
-                if (line[0] == '#' || line == "") {
-                    line = "";
-                    continue;
-                } else {
-                    break;
-                }
-            }
-            return line;
-        }
-
-        void close() {
-            file.close();
-        }
-
-        ~FileScanner() {
-            close();
-        }
-    };
-
-    class StringScanner {
-        stringstream stream;
-    public:
-        StringScanner() {}
-
-        StringScanner(const string &s) : stream(s) {}
-
-        void setBuffer(const string &s) {
-            stream = stringstream(s);
-        }
-
-        string nextString() {
-            string res;
-            stream >> res;
-            return res;
-        }
-
-        int nextInt() {
-            int res = 0;
-            stream >> res;
-            return res;
-        }
-
-        ldb nextDouble() {
-            ldb res;
-            stream >> res;
-            return res;
-        }
-
-        Vector nextVector() {
-            ldb x, y, z;
-            x = nextDouble();
-            y = nextDouble();
-            z = nextDouble();
-            return std::move(Vector(x, y, z));
-        }
-    };
-
+protected:
     void checkEofScanner(FileScanner &scanner, const string &group) {
         if (scanner.eof()) {
             fprintf(stderr, "Unsupported file format.\nBug with unexpected end of file in group %s", group);
@@ -109,7 +27,7 @@ class RT_file : public ISceneParser {
         }
     }
 
-    void parseFile(const string &filename) {
+    virtual void parseFile(const string &filename) {
         FileScanner scanner(filename);
 
         string line;
@@ -134,7 +52,7 @@ class RT_file : public ISceneParser {
         scanner.close();
     }
 
-    void viewportSection(FileScanner &scanner) {
+    virtual void viewportSection(FileScanner &scanner) {
         const int options = 4;
         StringScanner stringScanner;
         string optionName;

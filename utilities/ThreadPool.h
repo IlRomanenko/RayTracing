@@ -64,10 +64,6 @@ public:
 
     void setWorkersNumber(size_t num_workers) {
         while (workers.size() != num_workers) {
-            while (workers.size() > num_workers) {
-                shutdownWorker = true;
-                task_queue_not_empty.notify_one();
-            }
             while (workers.size() < num_workers) {
                 workers.emplace_back([&]() { workerFunction(); });
             }
