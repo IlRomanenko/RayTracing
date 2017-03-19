@@ -1,0 +1,86 @@
+materials
+    entry
+        name mirror
+        color 255 255 155
+        alpha 1
+        reflect 0.8
+        refract 0
+    endentry
+
+    entry
+        name transparent_mirror
+        color 255 255 255
+        alpha 0.5
+        reflect 1
+        refract 1.5
+    endentry
+
+    entry
+        name sphere_material
+        color 255 0 128
+        alpha 1
+        reflect 0
+        refract 0
+    endentry
+
+endmaterials
+
+geometry
+    sphere
+        coords 0 2 0
+        radius 1.3
+        material transparent_mirror
+    endsphere
+
+    sphere
+        coords 3 1 3
+        radius 1
+        material sphere_material
+    endsphere
+
+    quadrangle
+    	vertex -2 6 2.000000
+        vertex -2 0 2.000000
+    	vertex -2 0 -2.000000
+    	vertex -2 6 -2.000000
+        material mirror
+    endquadrangle
+
+
+    quadrangle
+    	vertex -6.000000 -0.000000 6.000000
+        vertex 6.000000 -0.000000 6.000000
+    	vertex 6.000000 0.000000 -6.000000
+    	vertex -6.000000 0.000000 -6.000000
+        material mirror
+    endquadrangle
+
+    quadrangle
+    	vertex -2.000000 6.000000 -2.000000
+        vertex -2.000000 -0.000000 -2.000000
+    	vertex 2.000000 0.000000 -2.000000
+    	vertex 2.000000 6.000000 -2.000000
+        material mirror
+    endquadrangle
+
+endgeometry
+
+lights
+    reference
+        power 1
+        distance 10
+    endreference
+    point
+        coords 0 5 0
+        power 9
+    endpoint
+
+    reference
+        power 1
+        distance 4
+    endreference
+    point
+        coords 2 1 0
+        power 7
+    endpoint
+endlights

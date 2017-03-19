@@ -1,7 +1,11 @@
-ObjFile
+Version
+    Version irt
+EndVersion
+
+File
     Name    refract.obj
     Directory   obj_examples/
-EndObjFile
+EndFile
 
 Viewport
        Origin      100 100 20
@@ -20,5 +24,14 @@ lights
     point
         coords 1 2 -1.2
         power 3
+    endpoint
+
+    reference
+        power 1
+        distance 1
+    endreference
+    point
+        coords 0 2 2
+        power 7
     endpoint
 endlights

@@ -15,6 +15,11 @@ struct Ray {
     Point begin;
     Vector direction;
 
+    Ray() {
+        begin = 0;
+        direction = Vector(1, 0, 0);
+    }
+
     Ray(Point begin, Point end) {
         direction = end - begin;
         direction.normalize();
@@ -30,6 +35,13 @@ struct Ray {
     ldb distance(const Point &point) const {
         Point npoint = point - begin;
         return (npoint - direction * (direction * npoint)).length();
+    }
+
+    Ray getReflectRay(const Point &point, const Vector &normal) const {
+        Vector dir = direction * (-1);
+        Vector norm_dir = dir - normal * (dir * normal);
+        Vector newDir = dir - norm_dir * 2;
+        return Ray(point, point + newDir);
     }
 };
 

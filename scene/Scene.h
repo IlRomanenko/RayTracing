@@ -10,11 +10,13 @@
 #include "../parsers/ObjLoader.h"
 #include "../ray-casting/KD_Tree.h"
 #include "../utilities/ThreadPool.h"
+#include "../geometry/Ray.h"
 
 #include <future>
 #include <thread>
 #include <queue>
 #include <mutex>
+#include <cmath>
 
 using namespace std;
 
@@ -23,7 +25,8 @@ class Scene {
 
     const ldb ANTIALIASING_CONST = 0.2;
     const int ANTIALIASING_POINT_COUNT = 5;
-    const int MAX_RAY_TRACING_DEPTH = 2;
+    const int MAX_RAY_TRACING_DEPTH = 3;
+    const ldb BIAS = 1e-4;
 
 
     MaterialsFactory materialsFactory;
@@ -45,25 +48,32 @@ class Scene {
     size_t width, height;
     float *pixels;
 
+    Intersection castRayKD(const Ray &ray) {
+        Ray nray = ray;
+        nray.begin += nray.direction * BIAS;
+        return kd_tree.castRay(nray);
+    }
+
     ldb getLightIntensity(Point pnt, const IGeometryObject *object) {
         ldb lightIntensity = 0;
 
         for (const Light &light : lights) {
 
             Ray newRay = LineFromTwoPoints(pnt, light.getPosition());
-            newRay.begin += newRay.direction * 1e-3;
-            Intersection lightIntersection = kd_tree.castRay(newRay);
+            Intersection lightIntersection = castRayKD(newRay);
             ldb lightPositionCoef = newRay.getLineCoef(light.getPosition());
 
             if (!lightIntersection || Double::greater(lightIntersection.rayIntersectionCoef, lightPositionCoef)) {
 
                 Vector normLightPos = light.getPosition() - pnt;
-                ldb inv_length = normLightPos.sqrLength();
+                ldb sqr_length = normLightPos.sqrLength();
                 normLightPos.normalize();
 
-                ldb currentPointLightContribution = object->getNormal(pnt) * normLightPos / inv_length;
+                ldb currentPointLightContribution = object->getNormal(pnt) * normLightPos;
                 ldb cur_power = light.getPower() / light.getReference().power * light.getReference().distance;
+
                 currentPointLightContribution *= cur_power;
+                currentPointLightContribution /= 4 * M_PI * sqr_length;
 
                 lightIntensity += max(currentPointLightContribution, (ldb) 0.0);
             }
@@ -71,36 +81,133 @@ class Scene {
         return min(lightIntensity + 0.2, 1.0);
     }
 
+    inline ldb clamp(const ldb &low, const ldb &high, const ldb &value) {
+        return std::max(low, std::min(high, value));
+    }
+
+    Vector refract(const Ray &ray, const Vector &point, const Vector &normal, ldb ior) {
+        ldb cosi = clamp(-1, 1, normal * ray.direction);
+        ldb etai = 1, etat = ior;
+        Vector n = normal;
+        if (Double::less(cosi, 0)) {
+            cosi *= -1;
+        } else {
+            swap(etai, etat);
+            n = n * -1;
+        }
+        ldb eta = etai / etat;
+        ldb k = 1 - eta * eta * (1 - cosi * cosi);
+        if (Double::less(k, 0)) {
+            // total internal reflection
+            return 0;
+        }
+        return ray.direction * eta + n * (eta * cosi - sqrt(k));
+    }
+
+    void fresnel(const Vector &I, const Vector &N, const ldb &ior, ldb &Kr) {
+        ldb cosi = clamp(-1, 1, N * I);
+        ldb etai = 1, etat = ior;
+        if (Double::greater(cosi, 0)) {
+            swap(etai, etat);
+        }
+        ldb sint = etai / etat * sqrt(max((ldb) 0, 1 - cosi * cosi));
+
+        if (Double::greaterEqual(sint, 0)) {
+            //total inherit reflection
+            Kr = 1;
+        } else {
+            ldb cost = sqrt(max((ldb) 0, 1 - sint * sint));
+            cosi = abs(cosi);
+            ldb Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost));
+            ldb Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
+            Kr = (Rs * Rs + Rp * Rp) / 2;
+        }
+    }
+
     Intersection castRay(const Ray &ray, int depth = 0) {
         if (depth > MAX_RAY_TRACING_DEPTH) {
             return Intersection();
         }
 
-        Intersection current = kd_tree.castRay(ray);
+        Intersection current = castRayKD(ray);
+
         if (!current) {
             return current;
         }
-        Point pnt = current.intersectionPoint;
-        Vector normal = current.object->getNormal(pnt);
-        Vector dir = ray.direction * (-1);
-        Vector norm_dir = dir - normal * (dir * normal);
-        Vector newDir = dir - norm_dir * 2;
+        const Material *currentMaterial = current.object->getMaterial();
+        Vector intersectionPoint = current.intersectionPoint;
+        Vector intersectionNormal = current.object->getNormal(intersectionPoint);
 
-        Ray newRay = LineFromTwoPoints(pnt + newDir, pnt + newDir * 2);
-        Intersection newIntersection = castRay(newRay, depth + 1);
+        Color materialColor;
 
-        Color materialColor = current.object->getMaterial()->getColor();
         Color refractColor;
         Color reflectColor;
+        ldb Kr, Kt; // reflection and refraction mix value
 
-        if (newIntersection) {
-            reflectColor = newIntersection.color * current.object->getMaterial()->getReflect();
-            reflectColor = reflectColor * getLightIntensity(newIntersection.intersectionPoint, newIntersection.object);
-            materialColor = materialColor * (1 - current.object->getMaterial()->getReflect());
+        fresnel(ray.direction, intersectionNormal, currentMaterial->getRefract(), Kr);
+        Kt = 1 - Kr;
+
+        ldb lightIntensity = getLightIntensity(current.intersectionPoint, current.object);
+
+        switch (currentMaterial->getType()) {
+            case ReflectDiffuse: {
+                materialColor = current.object->getMaterial()->getColor() * (1 - currentMaterial->getReflect());
+                Ray reflectRay = ray.getReflectRay(intersectionPoint, intersectionNormal);
+                Intersection reflectInter = castRay(reflectRay, depth + 1);
+                if (reflectInter) {
+                    reflectColor = reflectInter.color * currentMaterial->getReflect();
+                }
+                //materialColor = materialColor * lightIntensity;
+                current.color = materialColor * lightIntensity + reflectColor;
+                break;
+            }
+            case ReflectRefract: {
+                //reflection
+                Ray reflectRay = ray.getReflectRay(intersectionPoint, intersectionNormal);
+                Intersection reflectInter = castRay(reflectRay, depth + 1);
+                if (reflectInter) {
+                    reflectColor = reflectInter.color * Kr;
+                    //reflectColor = reflectColor * getLightIntensity(reflectInter.intersectionPoint, reflectInter.object);
+                }
+
+                //refraction
+                Vector refractDirection = refract(ray, intersectionPoint, intersectionNormal,
+                                                  currentMaterial->getRefract());
+                Ray refractRay = LineFromTwoPoints(intersectionPoint, intersectionPoint + refractDirection);
+                Intersection refractInter = castRay(refractRay, depth + 1);
+                if (refractInter) {
+                    refractColor = refractInter.color * Kt;
+                    //refractColor = refractColor * getLightIntensity(refractInter.intersectionPoint, refractInter.object);
+                }
+                current.color = reflectColor + refractColor;
+                break;
+            }
+            case Diffuse: {
+                materialColor = current.object->getMaterial()->getColor() * lightIntensity;
+                current.color = materialColor;
+                break;
+            }
+            case Transparent: {
+                materialColor = currentMaterial->getColor() * currentMaterial->getAlpha();
+
+                Vector refractDirection = refract(ray, intersectionPoint, intersectionNormal,
+                                                  currentMaterial->getRefract());
+                Ray refractRay = LineFromTwoPoints(intersectionPoint, intersectionPoint + refractDirection);
+                Intersection refractInter = castRay(refractRay, depth + 1);
+                if (refractInter) {
+                    refractColor = refractInter.color * (1 - currentMaterial->getAlpha());
+                }
+
+                //materialColor = materialColor * lightIntensity;
+                current.color = materialColor * lightIntensity + refractColor;
+                break;
+            }
         }
 
-        current.color = (materialColor + reflectColor + refractColor).normalize();
+        //ldb lightIntensity = getLightIntensity(current.intersectionPoint, current.object);
+        //current.color = ((materialColor + reflectColor + refractColor)).normalize();
 
+        current.color = current.color.normalize();
         return current;
     }
 
@@ -108,16 +215,10 @@ class Scene {
         Color color(0, 0, 0);
 
         Intersection intersection = castRay(ray);
-
         if (!intersection) {
-            return Color(0.3, 0.3, 0.3);
+            return Color(0.0, 0.0, 0.0);
         }
-
-        ldb lightIntensity = getLightIntensity(intersection.intersectionPoint, intersection.object);
-
-        color = intersection.color;
-        color = color * lightIntensity;
-        return color.normalize();
+        return intersection.color;
     }
 
     void getSomePixelsToRender(vector<size_t> &v) {
@@ -300,7 +401,6 @@ public:
     ~Scene() {
         threadPool.shutdown();
     }
-
 
 };
 

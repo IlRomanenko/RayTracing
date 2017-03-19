@@ -180,7 +180,7 @@ namespace kd_tree_test {
         vector<Light> lights;
         vector<IGeometryObject *> geometry;
         ObjLoader rtFile(materialsFactory, viewport, lights, geometry);
-        rtFile.openScene("examples/obj_examples/buggy.obj", "examples/obj_examples/");
+        rtFile.openScene("buggy.obj", "examples/obj_examples/");
         //rtFile.openScene("examples/scene.rt", "");
 
         tree = new KD_Tree(geometry);

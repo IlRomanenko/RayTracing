@@ -8,7 +8,7 @@
 #include "parsers/MyParser.h"
 
 Scene<MyParser> scene;
-const size_t width = 600, height = 600;
+const size_t width = 1600, height = 1600;
 const float* pixels;
 int currentWindow;
 GLuint textureID;
@@ -65,7 +65,7 @@ void initRayCasting() {
 
     //scene.openScene("examples/obj_examples/buggy.obj", "examples/obj_examples/", width, height);
     //scene.openScene("examples/scene.rt", "examples/obj_examples/", width, height);
-    scene.openScene("refract.irt", "examples/", width, height);
+    scene.openScene("refract2.irt", "examples/", width, height);
 
     scene.render();
 

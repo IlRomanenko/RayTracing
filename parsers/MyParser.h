@@ -10,10 +10,14 @@
  *
  * .irt     type format:
  *
- * ObjFile
- *      Name <name of ObjFile>
- *      Directory <directory of ObjFile>
- * EndObjFile
+ * Version
+ *      Version [rt|irt]
+ * Endversion
+ *
+ * File
+ *      Name <name of file>
+ *      Directory <directory of file>
+ * EndFile
  *
  * Viewport
  *      Origin      <vector(position)>
@@ -47,30 +51,64 @@
 
 class MyParser : public RT_file {
 
-    string objFileName, objFileDirectory;
+    enum FileType {
+        RT, OBJ, UNKNOWN
+    };
+
+    string fileName, fileDirectory;
+
+    FileType geometryFileType = FileType::UNKNOWN;;
 
 protected:
-    void objFileSection(FileScanner &scanner) {
+
+    void fileSection(FileScanner &scanner) {
         string line;
 
         StringScanner stringScanner;
         string optionName;
 
-        while ((line = scanner.nextLine()) != "EndObjFile") {
+        while ((line = scanner.nextLine()) != "EndFile") {
 
-            checkEofScanner(scanner, "ObjFile");
+            checkEofScanner(scanner, "File");
 
             stringScanner.setBuffer(line);
             optionName = stringScanner.nextString();
 
             if (optionName == "Name") {
-                objFileName = stringScanner.nextString();
+                fileName = stringScanner.nextString();
             } else if (optionName == "Directory") {
-                objFileDirectory = stringScanner.nextString();
+                fileDirectory = stringScanner.nextString();
             } else {
-                fprintf(stderr, "Unsupported file format.\nBug with ObjFile -> optionName %s", optionName);
+                fprintf(stderr, "Unsupported file format.\nBug with File -> optionName %s", optionName);
                 throw exception();
             }
+        }
+    }
+
+    void versionSection(FileScanner &scanner) {
+        string line;
+
+        StringScanner stringScanner;
+        string optionName, type;
+
+        while ((line = scanner.nextLine()) != "EndVersion") {
+
+            checkEofScanner(scanner, "Version");
+
+            stringScanner.setBuffer(line);
+            optionName = stringScanner.nextString();
+
+            if (optionName == "Version") {
+                type = stringScanner.nextString();
+            } else {
+                fprintf(stderr, "Unsupported file format.\nBug with Version -> optionName %s", optionName);
+                throw exception();
+            }
+        }
+        if (type == "rt") {
+            geometryFileType = FileType::RT;
+        } else if (type == "irt") {
+            geometryFileType = FileType::OBJ;
         }
     }
 
@@ -79,10 +117,11 @@ protected:
 
         string line;
         while (!scanner.eof()) {
-
             line = scanner.nextLine();
-            if (line == "ObjFile") {
-                objFileSection(scanner);
+            if (line == "Version") {
+                versionSection(scanner);
+            } else if (line == "File") {
+                fileSection(scanner);
             } else if (line == "Viewport") {
                 viewportSection(scanner);
             } else if (line == "lights") {
@@ -133,7 +172,7 @@ protected:
         upNormal.normalize();
         direction.normalize();
 
-        Vector base_height = upNormal * (-1), base_width = direction ^ upNormal;
+        Vector base_height = upNormal * (-1), base_width = direction ^upNormal;
         Point center = origin + direction * distance;
 
         viewport.setTopLeft(center - base_height * (height / 2) - base_width * (width / 2));
@@ -142,17 +181,34 @@ protected:
         viewport.setOrigin(origin);
     }
 
+    ISceneParser *createParser() const {
+        ISceneParser *result;
+        Viewport tempViewport;
+        switch (geometryFileType) {
+            case RT:
+                result = new RT_file(materialsFactory, tempViewport, lights, geometry);
+                break;
+            case OBJ:
+                result = new ObjLoader(materialsFactory, tempViewport, lights, geometry);
+                break;
+            default:
+                result = nullptr;
+        }
+        return result;
+    }
+
 public:
     MyParser(MaterialsFactory &factory,
              Viewport &viewport,
              vector<Light> &lights,
              vector<IGeometryObject *> &geometry)
-            : RT_file(factory, viewport, lights, geometry) { }
+            : RT_file(factory, viewport, lights, geometry) {}
 
     void openScene(const string &filename, const string &directory) override {
         parseFile(directory + filename);
-        ObjLoader loader(materialsFactory, viewport, lights, geometry);
-        loader.openScene(objFileName, directory + objFileDirectory);
+        ISceneParser *parser = createParser();
+        parser->openScene(fileName, directory + fileDirectory);
+        delete parser;
     }
 };
 

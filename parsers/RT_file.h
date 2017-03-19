@@ -53,14 +53,19 @@ protected:
     }
 
     virtual void viewportSection(FileScanner &scanner) {
-        const int options = 4;
         StringScanner stringScanner;
         string optionName;
 
         Vector origin, topLeft, bottomLeft, topRight;
+        string line;
 
-        for (int i = 0; i < options; i++) {
-            stringScanner.setBuffer(scanner.nextLine());
+        while ((line = scanner.nextLine()) != "endviewport") {
+
+            checkEofScanner(scanner, "viewport");
+
+            stringScanner.setBuffer(line);
+            optionName = stringScanner.nextString();
+
             optionName = stringScanner.nextString();
             if (optionName == "origin") {
                 origin = stringScanner.nextVector();
@@ -76,11 +81,6 @@ protected:
             }
         }
         viewport = Viewport(origin, topLeft, topRight, bottomLeft);
-
-        if (scanner.nextLine() != "endviewport") {
-            fprintf(stderr, "Unsupported file format.\nBug with endviewport");
-            throw exception();
-        }
     }
 
     void materialsSection(FileScanner &scanner) {
@@ -360,7 +360,7 @@ public:
             : ISceneParser(factory, viewport, lights, geometry) {}
 
     void openScene(const string &filename, const string &directory) override {
-        parseFile(filename);
+        parseFile(directory + filename);
     }
 
 };

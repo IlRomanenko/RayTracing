@@ -38,7 +38,7 @@ namespace geometry {
             b = B / (ldb) 255.0;
         }
 
-        Color(float *rgb) {
+        explicit Color(float *rgb) {
             r = *rgb;
             g = *(rgb + 1);
             b = *(rgb + 2);
