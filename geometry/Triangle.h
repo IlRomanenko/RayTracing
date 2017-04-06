@@ -12,12 +12,22 @@ public:
 
     Triangle() = delete;
 
-    Triangle(const array<Vector, 3> &trianglePoints, Material *triangleMaterial) : Polygon(trianglePoints) {
-        material = triangleMaterial;
-    }
-
     Triangle(const vector<Vector> &trianglePoints, Material *triangleMaterial) : Polygon(trianglePoints) {
         material = triangleMaterial;
     }
 
+    ostream &operator<<(ostream &stream) override;
 };
+
+ostream &Triangle::operator<<(ostream &stream) {
+    stream << "\ttriangle" << endl;
+
+    for (auto pnt : points) {
+        stream << "\t\tvertex " <<  pnt.x << ' ' << pnt.y << ' ' << pnt.z << endl;
+    }
+
+
+    stream << "\t\tmaterial " << material->getMaterialName() << endl;
+    stream << "\tendtriangle" << endl;
+    return stream;
+}

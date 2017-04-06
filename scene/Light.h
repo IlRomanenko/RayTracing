@@ -10,6 +10,7 @@ using geometry::Point;
 
 struct Reference {
     ldb power, distance;
+
     Reference() {
         power = 0;
         distance = 1;
@@ -46,4 +47,21 @@ public:
     const Point &getPosition() const {
         return position;
     }
+
+    friend ostream &operator<<(ostream &stream, const Light &light);
+
 };
+
+ostream &operator<<(ostream &stream, const Light &light) {
+
+    stream << "\treference" << endl;
+    stream << "\t\tpower " << light.ref.power << endl;
+    stream << "\t\tdistance " << light.ref.distance << endl;
+    stream << "\tendreference" << endl;
+
+    stream << "\tpoint" << endl;
+    stream << "\t\tcoords " << light.position.x << ' ' << light.position.y << ' ' << light.position.z << endl;
+    stream << "\t\tpower " << light.power << endl;
+    stream << "\tendpoint" << endl;
+    return stream;
+}

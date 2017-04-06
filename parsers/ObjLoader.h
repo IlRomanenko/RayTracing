@@ -21,6 +21,8 @@ using namespace geometry;
 
 class ObjLoader : public ISceneParser {
 
+    vector<Material *> currentMaterials;
+
     void parseFile(const string &filename, const string &directory) {
         tinyobj::attrib_t attrib;
         vector<tinyobj::shape_t> shapes;
@@ -33,15 +35,14 @@ class ObjLoader : public ISceneParser {
             throw exception();
         }
 
-        vector<Material *> currentMaterials;
         for (size_t i = 0; i < materials.size(); i++) {
             Color clr(materials[i].diffuse);
             currentMaterials.push_back(materialsFactory.constructMaterial(
                     materials[i].name,
                     clr,
                     materials[i].dissolve,
-                    materials[i].ambient[0],
-                    materials[i].ambient[0]));
+                    0,
+                    0));
         }
 
         for (size_t s = 0; s < shapes.size(); s++) {
@@ -74,7 +75,7 @@ public:
               Viewport &viewport,
               vector<Light> &lights,
               vector<IGeometryObject *> &geometry)
-            : ISceneParser(factory, viewport, lights, geometry) { }
+            : ISceneParser(factory, viewport, lights, geometry) {}
 
     void openScene(const string &filename, const string &directory) {
         parseFile(directory + filename, directory);

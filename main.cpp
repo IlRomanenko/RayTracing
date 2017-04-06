@@ -3,16 +3,18 @@
 #include "base_headers.h"
 #include "scene/Scene.h"
 
-
 #include "KD_tree_test.h"
 #include "parsers/MyParser.h"
 #include <png++/png.hpp>
 
 Scene<RT_file> scene;
 
-const string SCENENAME = "input";
+const string SCENENAME = "hard";
 const string SCENEFORMAT = ".rt";
 const string DIRECTORY = "examples/rt_examples/";
+
+const string TEMP_SCENEFORMAT = ".rt";
+const string TEMP_DIRECTORY = "examples/rt_examples/";
 
 
 const size_t width = 600, height = 600;
@@ -99,13 +101,18 @@ void timer_redisplay(int) {
 }
 
 void tempTest() {
+/*
+    MaterialsFactory factory;
+    Viewport viewport;
+    vector<Light> lights;
+    vector<IGeometryObject*> geometry;
 
-    vector<Vector> points;
-    for (int i = 0; i < 3; i++) {
-        points.push_back(Vector(i, i, i));
-    }
-    BoundingBox box(points.begin(), points.end());
+    MyParser parser(factory, viewport, lights, geometry);
 
+    parser.openScene(SCENENAME + SCENEFORMAT, DIRECTORY);
+
+    parser.saveAsRTFile(SCENENAME + TEMP_SCENEFORMAT, TEMP_DIRECTORY);
+*/
 }
 
 void keyboard(unsigned char chr, int, int) {

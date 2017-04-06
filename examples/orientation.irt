@@ -1,11 +1,15 @@
-ObjFile
-    Name    orientation.obj
-    Directory   obj_examples/
-EndObjFile
+Version
+    Version irt
+EndVersion
+
+File
+    Name orientation.obj
+    Directory obj_examples/
+EndFile
 
 Viewport
        Origin      100 100 -100
-       UpNormal    0 -1 0
+       UpNormal    0 1 0
        LookAt      0 0 0
        Width       10
        Height      10
@@ -16,10 +20,10 @@ lights
 #5
     reference
         power 1
-        distance 1
+        distance 100
     endreference
     point
-        coords 3 3 -3
+        coords 5 5 -5
         power 500
     endpoint
 endlights

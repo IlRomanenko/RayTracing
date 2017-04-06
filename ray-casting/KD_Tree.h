@@ -227,14 +227,14 @@ public:
         return boundingBoxPlaneSplit;
     }
 
-    pnode recBuild(const vector<IGeometryObject *> &objects, const BoundingBox &boundingBox) {
+    pnode recBuild(const vector<IGeometryObject *> &objects, const BoundingBox &boundingBox, size_t depth = 0) {
         pnode node = new KD_tree_node();
         node->boundingBox = boundingBox;
         node->nodeSize = objects.size();
 
         const auto &split = findPlane(objects, boundingBox);
 
-        if (Double::greaterEqual(split.cost, objects.size() * intersectionCoef)) {
+        if (Double::greaterEqual(split.cost, objects.size() * intersectionCoef) || depth > 10) {
             node->isLeaf = new KD_tree_leaf();
             node->isLeaf->objects = objects;
             return node;
@@ -245,8 +245,8 @@ public:
 
         node->splitPlane = make_pair(split.value, split.axis);
 
-        auto leftPart = bind(buildLambda, parts[0], boxes[0]);
-        auto rightPart = bind(buildLambda, parts[1], boxes[1]);
+        auto leftPart = bind(buildLambda, parts[0], boxes[0], depth);
+        auto rightPart = bind(buildLambda, parts[1], boxes[1], depth);
 
         auto futureLeft = pool->submit(move(leftPart));
 
@@ -313,7 +313,7 @@ public:
             delete pool;
         }
         pool = new ThreadPool<pnode>(numberOfThreads - 1);
-        auto result = pool->submit(bind(buildLambda, objects, getBoundingBox(objects)));
+        auto result = pool->submit(bind(buildLambda, objects, getBoundingBox(objects), 0));
         pool->wait(move(result));
         root = result.get();
         pool->shutdown();
@@ -345,9 +345,9 @@ public:
 
     ThreadPool<pnode> *pool;
 
-    const function<pnode(const vector<IGeometryObject*> &, const BoundingBox&)> buildLambda =
-            [&](const vector<IGeometryObject *> &cur_objects, const BoundingBox &boundingBox) {
-        return recBuild(cur_objects, boundingBox);
+    const function<pnode(const vector<IGeometryObject*> &, const BoundingBox&, size_t)> buildLambda =
+            [&](const vector<IGeometryObject *> &cur_objects, const BoundingBox &boundingBox, size_t depth) {
+        return recBuild(cur_objects, boundingBox, depth + 1);
     };
 };
 

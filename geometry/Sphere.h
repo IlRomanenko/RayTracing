@@ -61,4 +61,18 @@ public:
     Vector getPosition() {
         return center;
     }
+
+    ostream &operator<<(ostream &stream) override;
+
 };
+
+ostream &Sphere::operator<<(ostream &stream) {
+    stream << "\tsphere" << endl;
+
+    stream << "\t\tcoords " << center.x << ' ' << center.y << ' ' << center.z << endl;
+    stream << "\t\tradius " << radius << endl;
+    stream << "\t\tmaterial " << material->getMaterialName() << endl;
+
+    stream << "\tendsphere" << endl;
+    return stream;
+}

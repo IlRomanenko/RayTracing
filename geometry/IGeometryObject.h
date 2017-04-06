@@ -34,6 +34,8 @@ public:
         return 0;
     }
 
+    virtual ostream& operator<<(ostream &stream) = 0;
+
     virtual ~IGeometryObject() {
         if (material != nullptr) {
             material->dispose();

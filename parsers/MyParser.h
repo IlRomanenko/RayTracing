@@ -12,7 +12,7 @@
  *
  * Version
  *      Version [rt|irt]
- * Endversion
+ * EndVersion
  *
  * File
  *      Name <name of file>
@@ -183,13 +183,12 @@ protected:
 
     ISceneParser *createParser() const {
         ISceneParser *result;
-        Viewport tempViewport;
         switch (geometryFileType) {
             case RT:
-                result = new RT_file(materialsFactory, tempViewport, lights, geometry);
+                result = new RT_file(materialsFactory, viewport, lights, geometry);
                 break;
             case OBJ:
-                result = new ObjLoader(materialsFactory, tempViewport, lights, geometry);
+                result = new ObjLoader(materialsFactory, viewport, lights, geometry);
                 break;
             default:
                 result = nullptr;
@@ -206,9 +205,41 @@ public:
 
     void openScene(const string &filename, const string &directory) override {
         parseFile(directory + filename);
+        Viewport tempViewport = viewport;
         ISceneParser *parser = createParser();
         parser->openScene(fileName, directory + fileDirectory);
         delete parser;
+        viewport = tempViewport;
     }
+
+    void saveAsRTFile(const string &filename, const string &directory) {
+        ofstream output(directory + filename, ios_base::out);
+
+        output << viewport << endl;
+
+        output << "materials" << endl;
+        const auto& materials = materialsFactory.getMaterialsVector();
+        for (const auto &material : materials) {
+            output << *material << endl;
+        }
+        output << "endmaterials" << endl << endl;
+
+        output << "lights" << endl;
+        for (const auto light : lights) {
+            output << light << endl;
+        }
+        output << "endlights" << endl << endl;
+
+        output << "geometry" << endl;
+        for (const auto geom : geometry) {
+            geom->operator<<(output);
+        }
+        output << "endgeometry" << endl << endl;
+
+
+        output.flush();
+        output.close();
+    }
+
 };
 

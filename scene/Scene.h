@@ -25,7 +25,7 @@ class Scene {
 
     const ldb ANTIALIASING_CONST = 0.2;
     const int ANTIALIASING_POINT_COUNT = 5;
-    const int MAX_RAY_TRACING_DEPTH = 10;
+    const int MAX_RAY_TRACING_DEPTH = 1;
     const int LIGHT_RAYS_COUNT = 15; //maybe later
     const ldb BIAS = 1e-7;
 

@@ -1,0 +1,29 @@
+Version
+    Version irt
+EndVersion
+
+File
+    Name buggy.obj
+    Directory obj_examples/
+EndFile
+
+Viewport
+       Origin      100 100 -100
+       UpNormal    0 1 0
+       LookAt      0 1 0
+       Width       20
+       Height      20
+       Distance    100    # distance from origin to viewport
+EndViewport
+
+lights
+#5
+    reference
+        power 1
+        distance 1
+    endreference
+    point
+        coords 0  -103 0
+        power 5000000
+    endpoint
+endlights

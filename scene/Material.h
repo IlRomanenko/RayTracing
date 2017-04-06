@@ -3,9 +3,11 @@
 //
 #pragma once
 
+#include <iostream>
 #include "../base_headers.h"
 
 using namespace geometry;
+using namespace std;
 
 class MaterialsFactory;
 
@@ -24,14 +26,18 @@ class Material {
 
     MaterialType type;
 
+    string materialName;
+
 protected:
 
-    Material(size_t materialId, Color color, ldb alpha, ldb reflect, ldb refract) {
+    Material(size_t materialId, Color color, ldb alpha, ldb reflect, ldb refract, const string &materialName) {
         this->materialId = materialId;
         this->color = color;
         this->alpha = alpha;
         this->reflect = reflect;
         this->refract = refract;
+        this->materialName = materialName;
+
         if (Double::notEqual(alpha, 1)) {
             type = MaterialType::Transparent;
         } else if (Double::equal(reflect, 0) && Double::equal(refract, 0)) {
@@ -70,9 +76,14 @@ public:
 
     void dispose();
 
+    const string &getMaterialName() const {
+        return materialName;
+    }
+
+    friend ostream &operator<<(ostream &stream, const Material &material);
+
     friend class MaterialsFactory;
 };
-
 
 class MaterialsFactory {
 
@@ -95,7 +106,7 @@ public:
     Material *constructMaterial(const string &materialName, const Color &color, ldb alpha, ldb reflect, ldb refract) {
         size_t hash = getHashCode(materialName);
 
-        Material *currentMaterial = new Material(hash, color, alpha, reflect, refract);
+        Material *currentMaterial = new Material(hash, color, alpha, reflect, refract, materialName);
 
         materials[hash] = currentMaterial;
         links[hash]++;
@@ -110,7 +121,6 @@ public:
         return currentMaterial;
     }
 
-
     void dispose(size_t materialId) {
         links[materialId]--;
         if (links[materialId] <= 0) {
@@ -118,6 +128,14 @@ public:
             materials.erase(materialId);
             links.erase(materialId);
         }
+    }
+
+    const auto getMaterialsVector() const {
+        vector<Material*> mat_vt;
+        for (auto mat_pair : materials) {
+            mat_vt.push_back(mat_pair.second);
+        }
+        return mat_vt;
     }
 
     ~MaterialsFactory() {

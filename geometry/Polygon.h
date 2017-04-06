@@ -28,12 +28,6 @@ protected:
 
 public:
 
-    Polygon(std::array<Vector, pointsSize> trianglePoints) {
-        points = trianglePoints;
-        calculateArea();
-        calculateNormal();
-    }
-
     Polygon(std::vector<Vector> trianglePoints) {
         for (int i = 0; i < pointsSize; i++) {
             points[i] = trianglePoints[i];
@@ -41,6 +35,7 @@ public:
         calculateArea();
         calculateNormal();
     }
+
 
     const array<Point, pointsSize> &getPoints() const {
         return points;

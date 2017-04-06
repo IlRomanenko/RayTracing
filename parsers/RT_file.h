@@ -82,7 +82,7 @@ protected:
         viewport = Viewport(origin, topLeft, topRight, bottomLeft);
     }
 
-    void materialsSection(FileScanner &scanner) {
+    virtual void materialsSection(FileScanner &scanner) {
         string line;
 
         StringScanner stringScanner;
