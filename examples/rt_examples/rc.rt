@@ -1,0 +1,65 @@
+viewport
+	origin 250 250 -100
+	topleft 10 510 0
+	bottomleft 10 10 0
+	topright 510 510 0
+endviewport
+
+lights
+    reference
+        power 1
+        distance 20000
+    endreference
+    
+    point
+        coords 100 200 30
+        power 1
+    endpoint
+endlights
+
+
+materials
+	entry
+		name id1
+		color 239 0 255
+		alpha 1
+		reflect 0
+		refract 0
+	endentry
+	entry
+		name id2
+		color 100 100 155
+		alpha 1
+		reflect 0
+		refract 0
+	endentry
+endmaterials
+
+geometry
+	triangle
+		vertex 50 50 100
+		vertex 100 50 100
+		vertex 100 100 100
+		material id1
+	endtriangle
+	triangle
+		vertex 50 50 0
+		vertex 100 50 0
+		vertex 100 100 0
+		material id2
+	endtriangle
+	
+	quadrangle
+		vertex 200 300 200
+		vertex 400 300 150
+		vertex 400 100 100
+		vertex 200 100 150
+		material id1
+	endquadrangle
+	
+	sphere
+		coords 200 200 200
+		radius 100
+		material id2
+	endsphere
+endgeometry

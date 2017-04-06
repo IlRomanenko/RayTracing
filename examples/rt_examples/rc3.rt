@@ -1,0 +1,135 @@
+viewport
+	origin 200 200 -200
+	topleft 10 510 0
+	bottomleft 10 10 0
+	topright 510 510 0
+endviewport
+
+lights
+    reference
+        power 1
+        distance 100000
+    endreference
+    
+    point
+        coords 150 150 130
+        power 1
+    endpoint
+
+    reference
+            power 1
+            distance 100000
+        endreference
+    point
+        coords 350 50 100
+        power 2
+    endpoint
+
+    reference
+            power 1
+            distance 100000
+        endreference
+    point
+        coords 100 300 100
+        power 1
+    endpoint
+endlights
+
+
+materials
+	entry
+		name id1
+		color 239 0 255
+		alpha 1
+		reflect 0.4
+		refract 0
+	endentry
+	entry
+		name id2
+		color 100 100 155
+		alpha 1
+		reflect 0.1
+		refract 0
+	endentry
+	entry
+		name id3
+		color 10 155 40
+		alpha 1
+		reflect 0.1
+		refract 0
+	endentry
+	
+	entry
+		name mirror
+		color 255 255 255
+		alpha 1
+		reflect 0.8
+		refract 0
+	endentry
+	
+	entry
+		name mirroryellow
+		color 255 255 0
+		alpha 1
+		reflect 0.75
+		refract 0
+	endentry
+endmaterials
+
+geometry
+	triangle
+		vertex 50 50 200
+		vertex 100 50 200
+		vertex 100 100 200
+		material id1
+	endtriangle
+	triangle
+		vertex 50 50 100
+		vertex 100 50 100
+		vertex 100 100 100
+		material id2
+	endtriangle
+	
+	quadrangle
+		vertex 400 300 250
+		vertex 400 100 200
+		vertex 200 100 250
+		vertex 200 300 300
+		material id1
+	endquadrangle
+	
+	sphere
+		coords 200 200 300
+		radius 100
+		material id2
+	endsphere
+	
+	quadrangle
+		vertex 500 400 100
+		vertex 500 350 300
+		vertex 100 350 300
+		vertex 100 400 100
+		material mirror
+	endquadrangle
+	
+	quadrangle
+		vertex 50 250 300
+		vertex 50 100 300
+		vertex 50 100 100
+		vertex 50 250 100
+		
+		material mirror
+	endquadrangle
+	
+	sphere
+		coords 350 200 150
+		radius 50
+		material id3
+	endsphere
+	
+	sphere
+		coords 250 0 300
+		radius 80
+		material mirroryellow
+	endsphere
+endgeometry
