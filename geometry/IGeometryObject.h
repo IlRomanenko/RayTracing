@@ -18,7 +18,7 @@ protected:
     Vector normal;
 
 public:
-    virtual Vector getNormal(Point point) const {
+    virtual Vector getNormal(Point) const {
         return normal;
     }
 

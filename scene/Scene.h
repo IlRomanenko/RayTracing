@@ -86,7 +86,7 @@ class Scene {
         return std::max(low, std::min(high, value));
     }
 
-    Vector refract(const Ray &ray, const Vector &point, const Vector &normal, ldb ior) {
+    Vector refract(const Ray &ray, const Vector &normal, ldb ior) {
         ldb cosi = clamp(-1, 1, normal * ray.direction);
         ldb etai = 1, etat = ior;
         Vector n = normal;
@@ -173,8 +173,7 @@ class Scene {
                 }
 
                 //refraction
-                Vector refractDirection = refract(ray, intersectionPoint, intersectionNormal,
-                                                  currentMaterial->getRefract());
+                Vector refractDirection = refract(ray, intersectionNormal, currentMaterial->getRefract());
                 Ray refractRay = LineFromTwoPoints(intersectionPoint, intersectionPoint + refractDirection);
                 Intersection refractInter = castRay(refractRay, lightIntensity, depth + 1);
                 if (refractInter) {
@@ -192,8 +191,7 @@ class Scene {
             case Transparent: {
                 materialColor = currentMaterial->getColor() * currentMaterial->getAlpha();
 
-                Vector refractDirection = refract(ray, intersectionPoint, intersectionNormal,
-                                                  currentMaterial->getRefract());
+                Vector refractDirection = refract(ray, intersectionNormal, currentMaterial->getRefract());
 
                 Ray refractRay = LineFromTwoPoints(intersectionPoint, intersectionPoint + refractDirection);
                 Intersection refractInter = castRay(refractRay, lightIntensity, depth + 1);
@@ -328,7 +326,6 @@ public:
             needToCalcPixels.push(i);
         }
 
-        size_t part = width * height / numberOfThreads;
         auto workerLambda = [&]() { renderWorker(); };
 
         for (size_t i = 0; i < numberOfThreads; i++) {
@@ -355,7 +352,7 @@ public:
         int offsets[3] = {-1, 0, 1};
 
         size_t nx, ny;
-        ldb maxT = 0;
+
         for (size_t i = 0; i < height; i++) {
             for (size_t j = 0; j < width; j++) {
                 ldb resultDifference = 0;

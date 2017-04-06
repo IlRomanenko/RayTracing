@@ -88,8 +88,7 @@ public:
                                                                 size_t rightSize) const {
         array<BoundingBox, 2> boxes = voxel.split(axisNumber, planeCoord);
 
-        ldb leftProb = boxes[0].calculateSurfaceArea(), rightProb = boxes[1].calculateSurfaceArea(), fullProb =
-                leftProb + rightProb;
+        ldb leftProb = boxes[0].calculateSurfaceArea(), rightProb = boxes[1].calculateSurfaceArea();
 
         leftProb /= voxel.calculateSurfaceArea();
         rightProb /= voxel.calculateSurfaceArea();
@@ -112,10 +111,8 @@ public:
     }
 
 
-    array<vector<IGeometryObject *>, 2> classify(const vector<IGeometryObject *> &objects,
-                                                 const BoundingBox &left,
-                                                 const BoundingBox &right,
-                                                 BoundingBoxSplit bboxSplit) {
+    array<vector<IGeometryObject *>, 2>
+    classify(const vector<IGeometryObject *> &objects, BoundingBoxSplit bboxSplit) {
         //TODO change classify strategy!!!
 
         vector<IGeometryObject *> leftPart, rightPart;
@@ -244,7 +241,7 @@ public:
         }
 
         const auto &boxes = boundingBox.split(split.axis, split.value);
-        const auto &parts = classify(objects, boxes[0], boxes[1], split);
+        const auto &parts = classify(objects, split);
 
         node->splitPlane = make_pair(split.value, split.axis);
 
@@ -257,22 +254,6 @@ public:
         pool->wait(move(futureLeft));
         node->left = futureLeft.get();
         return node;
-    }
-
-    pair<bool, ldb> getPlaneSplitCoef(pnode node, const Ray &ray) {
-        Vector normal;
-        if (node->splitPlane.second == 0) {
-            normal = Vector(1, 0, 0);
-        } else if (node->splitPlane.second == 1) {
-            normal = Vector(0, 1, 0);
-        } else if (node->splitPlane.second == 2) {
-            normal = Vector(0, 0, 1);
-        }
-        if (Double::equal(ray.direction * normal, 0)) {
-            return make_pair(false, -1);
-        }
-        ldb coef = (node->splitPlane.first - ray.begin * normal) / (ray.direction * normal);
-        return make_pair(true, coef);
     }
 
     Intersection findIntersection(pnode node, const Ray &ray, const array<ldb, 2> coefs) {

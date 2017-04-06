@@ -190,7 +190,7 @@ namespace kd_tree_test {
         //glutPostRedisplay();
     }
 
-    void keyboardFunc(unsigned char chr, int x, int y) {
+    void keyboardFunc(unsigned char chr, int, int) {
         if (chr == 'w') {
             cam_x += 0.2;
         } else if (chr == 's') {

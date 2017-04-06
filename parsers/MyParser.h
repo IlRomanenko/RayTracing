@@ -79,7 +79,7 @@ protected:
             } else if (optionName == "Directory") {
                 fileDirectory = stringScanner.nextString();
             } else {
-                fprintf(stderr, "Unsupported file format.\nBug with File -> optionName %s", optionName);
+                fprintf(stderr, "Unsupported file format.\nBug with File -> optionName %s", optionName.c_str());
                 throw exception();
             }
         }
@@ -101,7 +101,7 @@ protected:
             if (optionName == "Version") {
                 type = stringScanner.nextString();
             } else {
-                fprintf(stderr, "Unsupported file format.\nBug with Version -> optionName %s", optionName);
+                fprintf(stderr, "Unsupported file format.\nBug with Version -> optionName %s", optionName.c_str());
                 throw exception();
             }
         }
@@ -127,7 +127,7 @@ protected:
             } else if (line == "lights") {
                 RT_file::lightsSection(scanner);
             } else if (line != "") {
-                fprintf(stderr, "Unsupported file format.\nBug with line %s", line);
+                fprintf(stderr, "Unsupported file format.\nBug with line %s", line.c_str());
                 throw exception();
             }
         }
@@ -164,7 +164,7 @@ protected:
             } else if (optionName == "Distance") {
                 distance = stringScanner.nextDouble();
             } else {
-                fprintf(stderr, "Unsupported file format.\nBug with viewport -> optionName %s", optionName);
+                fprintf(stderr, "Unsupported file format.\nBug with viewport -> optionName %s", optionName.c_str());
                 throw exception();
             }
         }

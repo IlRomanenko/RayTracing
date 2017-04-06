@@ -1,0 +1,98 @@
+viewport
+	origin 200 200 -200
+	topleft 10 510 0
+	bottomleft 10 10 0
+	topright 510 510 0
+endviewport
+
+lights
+    reference
+        power 1
+        distance 100000
+    endreference
+    
+    point
+        coords 150 150 130
+        power 1.0
+    endpoint
+
+
+
+    reference
+            power 1
+            distance 100000
+        endreference
+    point
+        coords 350 50 100
+        power 2.0
+    endpoint
+
+
+
+    reference
+            power 1
+            distance 100000
+        endreference
+    point
+        coords 100 300 100
+        power 1.0
+    endpoint
+endlights
+
+
+materials
+	entry
+		name id1
+		color 239 0 255
+		alpha 1
+		reflect 0.4
+		refract 0
+	endentry
+	entry
+		name id2
+		color 100 100 155
+		alpha 1
+		reflect 0.1
+		refract 0
+	endentry
+	entry
+		name id3
+		color 10 155 40
+		alpha 1
+		reflect 0.1
+		refract 0
+	endentry
+	
+	entry
+		name mirror
+		color 255 255 255
+		alpha 1
+		reflect 0.5
+		refract 0
+	endentry
+	
+	entry
+		name mirroryellow
+		color 255 255 0
+		alpha 1
+		reflect 0.75
+		refract 0
+	endentry
+endmaterials
+
+geometry
+    quadrangle
+    vertex 400 300 250
+    vertex 400 100 200
+    vertex 200 100 250
+    vertex 200 300 300
+    material id1
+    endquadrangle
+	quadrangle
+		vertex 500 400 100
+		vertex 500 350 300
+		vertex 100 350 300
+		vertex 100 400 100
+		material mirror
+	endquadrangle
+endgeometry

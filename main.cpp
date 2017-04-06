@@ -10,7 +10,7 @@
 
 Scene<RT_file> scene;
 
-const string SCENENAME = "transparent";
+const string SCENENAME = "input";
 const string SCENEFORMAT = ".rt";
 const string DIRECTORY = "examples/rt_examples/";
 
@@ -108,7 +108,7 @@ void tempTest() {
 
 }
 
-void keyboard(unsigned char chr, int x, int y) {
+void keyboard(unsigned char chr, int, int) {
     if (chr == ' ') {
         scene.antialiasing();
         glutTimerFunc(16, timer_redisplay, 0);

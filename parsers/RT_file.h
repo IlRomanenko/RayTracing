@@ -22,7 +22,7 @@ class RT_file : public ISceneParser {
 protected:
     void checkEofScanner(FileScanner &scanner, const string &group) {
         if (scanner.eof()) {
-            fprintf(stderr, "Unsupported file format.\nBug with unexpected end of file in group %s", group);
+            fprintf(stderr, "Unsupported file format.\nBug with unexpected end of file in group %s", group.c_str());
             throw exception();
         }
     }
@@ -44,7 +44,7 @@ protected:
             } else if (line == "geometry") {
                 geometrySection(scanner);
             } else if (line != "") {
-                fprintf(stderr, "Unsupported file format.\nBug with line %s", line);
+                fprintf(stderr, "Unsupported file format.\nBug with line %s", line.c_str());
                 throw exception();
             }
         }
@@ -75,7 +75,7 @@ protected:
             } else if (optionName == "topright") {
                 topRight = stringScanner.nextVector();
             } else {
-                fprintf(stderr, "Unsupported file format.\nBug with optionName %s", optionName);
+                fprintf(stderr, "Unsupported file format.\nBug with optionName %s", optionName.c_str());
                 throw exception();
             }
         }
@@ -91,7 +91,7 @@ protected:
             checkEofScanner(scanner, "materials");
 
             if (line != "entry") {
-                fprintf(stderr, "Unsupported file format.\nBug with entry %s", line);
+                fprintf(stderr, "Unsupported file format.\nBug with entry %s", line.c_str());
                 throw exception();
             }
             readMaterialEntry(scanner);
@@ -130,7 +130,8 @@ protected:
                 b = stringScanner.nextInt();
                 color = Color(r, g, b);
             } else {
-                fprintf(stderr, "Unsupported file format.\nBug with materials -> entry -> optionName %s", optionName);
+                fprintf(stderr, "Unsupported file format.\nBug with materials -> entry -> optionName %s",
+                        optionName.c_str());
                 throw exception();
             }
         }
@@ -143,12 +144,12 @@ protected:
         StringScanner stringScanner;
         while ((line = scanner.nextLine()) != "endlights") {
             if (scanner.eof()) {
-                fprintf(stderr, "Unsupported file format.\nBug with endlights %s", line);
+                fprintf(stderr, "Unsupported file format.\nBug with endlights %s", line.c_str());
                 throw exception();
             }
 
             if (line != "reference") {
-                fprintf(stderr, "Unsupported file format.\nBug with entry %s", line);
+                fprintf(stderr, "Unsupported file format.\nBug with entry %s", line.c_str());
                 throw exception();
             }
 
@@ -178,7 +179,8 @@ protected:
             } else if (optionName == "distance") {
                 distance = stringScanner.nextDouble();
             } else {
-                fprintf(stderr, "Unsupported file format.\nBug with lights -> entry -> optionName %s", optionName);
+                fprintf(stderr, "Unsupported file format.\nBug with lights -> entry -> optionName %s",
+                        optionName.c_str());
                 throw exception();
             }
         }
@@ -191,7 +193,7 @@ protected:
 
         line = scanner.nextLine();
         if (line != "point") {
-            fprintf(stderr, "Unsupported file format.\nBug with lights -> entry -> point %s", optionName);
+            fprintf(stderr, "Unsupported file format.\nBug with lights -> entry -> point %s", optionName.c_str());
             throw exception();
         }
         while ((line = scanner.nextLine()) != "endpoint") {
@@ -207,7 +209,8 @@ protected:
             } else if (optionName == "power") {
                 power = stringScanner.nextDouble();
             } else {
-                fprintf(stderr, "Unsupported file format.\nBug with lights -> entry -> optionName %s", optionName);
+                fprintf(stderr, "Unsupported file format.\nBug with lights -> entry -> optionName %s",
+                        optionName.c_str());
                 throw exception();
             }
         }
@@ -236,7 +239,7 @@ protected:
             } else if (optionName == "quadrangle") {
                 readQuadrangle(scanner);
             } else {
-                fprintf(stderr, "Unsupported file format.\nBug with entry %s", line);
+                fprintf(stderr, "Unsupported file format.\nBug with entry %s", line.c_str());
                 throw exception();
             }
         }
@@ -266,7 +269,7 @@ protected:
             } else if (optionName == "coords") {
                 position = stringScanner.nextVector();
             } else {
-                fprintf(stderr, "Unsupported file format.\nBug with materials -> entry -> %s", optionName);
+                fprintf(stderr, "Unsupported file format.\nBug with materials -> entry -> %s", optionName.c_str());
                 throw exception();
             }
         }
@@ -297,7 +300,7 @@ protected:
             } else if (optionName == "material") {
                 material_name = stringScanner.nextString();
             } else {
-                fprintf(stderr, "Unsupported file format.\nBug with materials -> entry -> %s", optionName);
+                fprintf(stderr, "Unsupported file format.\nBug with materials -> entry -> %s", optionName.c_str());
                 throw exception();
             }
         }
@@ -333,7 +336,7 @@ protected:
             } else if (optionName == "material") {
                 material_name = stringScanner.nextString();
             } else {
-                fprintf(stderr, "Unsupported file format.\nBug with materials -> entry -> %s", optionName);
+                fprintf(stderr, "Unsupported file format.\nBug with materials -> entry -> %s", optionName.c_str());
                 throw exception();
             }
         }

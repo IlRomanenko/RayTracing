@@ -29,7 +29,7 @@ class ObjLoader : public ISceneParser {
         bool exitCode = tinyobj::LoadObj(&attrib, &shapes, &materials, &error, filename.c_str(), directory.c_str());
 
         if (!exitCode) {
-            fprintf(stderr, "Error with obj file %s", error);
+            fprintf(stderr, "Error with obj file %s", error.c_str());
             throw exception();
         }
 
@@ -48,7 +48,7 @@ class ObjLoader : public ISceneParser {
             // Loop over faces(polygon)
             size_t index_offset = 0;
             for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
-                int fv = shapes[s].mesh.num_face_vertices[f];
+                size_t fv = shapes[s].mesh.num_face_vertices[f];
 
                 vector<Point> points;
 

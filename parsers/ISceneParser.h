@@ -28,4 +28,6 @@ public:
 
     virtual void openScene(const string &filename,
                            const string &directory) = 0;
+
+    virtual ~ISceneParser() { }
 };
