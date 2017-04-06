@@ -25,8 +25,9 @@ class Scene {
 
     const ldb ANTIALIASING_CONST = 0.2;
     const int ANTIALIASING_POINT_COUNT = 5;
-    const int MAX_RAY_TRACING_DEPTH = 3;
-    const ldb BIAS = 1e-4;
+    const int MAX_RAY_TRACING_DEPTH = 10;
+    const int LIGHT_RAYS_COUNT = 15; //maybe later
+    const ldb BIAS = 1e-7;
 
 
     MaterialsFactory materialsFactory;
@@ -73,7 +74,7 @@ class Scene {
                 ldb cur_power = light.getPower() / light.getReference().power * light.getReference().distance;
 
                 currentPointLightContribution *= cur_power;
-                currentPointLightContribution /= 4 * M_PI * sqr_length;
+                currentPointLightContribution /= /*4 * M_PI **/ sqr_length;
 
                 lightIntensity += max(currentPointLightContribution, (ldb) 0.0);
             }
@@ -124,11 +125,11 @@ class Scene {
         }
     }
 
-    Intersection castRay(const Ray &ray, int depth = 0) {
+    Intersection castRay(const Ray &ray, ldb additionalLight = 0, int depth = 0) {
         if (depth > MAX_RAY_TRACING_DEPTH) {
             return Intersection();
         }
-
+        additionalLight =0;
         Intersection current = castRayKD(ray);
 
         if (!current) {
@@ -147,43 +148,44 @@ class Scene {
         fresnel(ray.direction, intersectionNormal, currentMaterial->getRefract(), Kr);
         Kt = 1 - Kr;
 
-        ldb lightIntensity = getLightIntensity(current.intersectionPoint, current.object);
+        ldb lightIntensity = getLightIntensity(current.intersectionPoint, current.object) + additionalLight;
+
+        ldb normalizedLight = min((ldb)1, lightIntensity);
+
 
         switch (currentMaterial->getType()) {
             case ReflectDiffuse: {
                 materialColor = current.object->getMaterial()->getColor() * (1 - currentMaterial->getReflect());
                 Ray reflectRay = ray.getReflectRay(intersectionPoint, intersectionNormal);
-                Intersection reflectInter = castRay(reflectRay, depth + 1);
+                Intersection reflectInter = castRay(reflectRay, lightIntensity, depth + 1);
                 if (reflectInter) {
                     reflectColor = reflectInter.color * currentMaterial->getReflect();
                 }
-                //materialColor = materialColor * lightIntensity;
-                current.color = materialColor * lightIntensity + reflectColor;
+                current.color = materialColor * normalizedLight + reflectColor;
                 break;
             }
             case ReflectRefract: {
                 //reflection
                 Ray reflectRay = ray.getReflectRay(intersectionPoint, intersectionNormal);
-                Intersection reflectInter = castRay(reflectRay, depth + 1);
+                Intersection reflectInter = castRay(reflectRay, lightIntensity, depth + 1);
                 if (reflectInter) {
                     reflectColor = reflectInter.color * Kr;
-                    //reflectColor = reflectColor * getLightIntensity(reflectInter.intersectionPoint, reflectInter.object);
                 }
 
                 //refraction
                 Vector refractDirection = refract(ray, intersectionPoint, intersectionNormal,
                                                   currentMaterial->getRefract());
                 Ray refractRay = LineFromTwoPoints(intersectionPoint, intersectionPoint + refractDirection);
-                Intersection refractInter = castRay(refractRay, depth + 1);
+                Intersection refractInter = castRay(refractRay, lightIntensity, depth + 1);
                 if (refractInter) {
                     refractColor = refractInter.color * Kt;
-                    //refractColor = refractColor * getLightIntensity(refractInter.intersectionPoint, refractInter.object);
                 }
+
                 current.color = reflectColor + refractColor;
                 break;
             }
             case Diffuse: {
-                materialColor = current.object->getMaterial()->getColor() * lightIntensity;
+                materialColor = current.object->getMaterial()->getColor() * normalizedLight;
                 current.color = materialColor;
                 break;
             }
@@ -192,20 +194,17 @@ class Scene {
 
                 Vector refractDirection = refract(ray, intersectionPoint, intersectionNormal,
                                                   currentMaterial->getRefract());
+
                 Ray refractRay = LineFromTwoPoints(intersectionPoint, intersectionPoint + refractDirection);
-                Intersection refractInter = castRay(refractRay, depth + 1);
+                Intersection refractInter = castRay(refractRay, lightIntensity, depth + 1);
                 if (refractInter) {
                     refractColor = refractInter.color * (1 - currentMaterial->getAlpha());
                 }
 
-                //materialColor = materialColor * lightIntensity;
-                current.color = materialColor * lightIntensity + refractColor;
+                current.color = materialColor * normalizedLight + refractColor;
                 break;
             }
         }
-
-        //ldb lightIntensity = getLightIntensity(current.intersectionPoint, current.object);
-        //current.color = ((materialColor + reflectColor + refractColor)).normalize();
 
         current.color = current.color.normalize();
         return current;
@@ -216,9 +215,9 @@ class Scene {
 
         Intersection intersection = castRay(ray);
         if (!intersection) {
-            return Color(0.0, 0.0, 0.0);
+            return Color(0.2, 0.2, 0.2);
         }
-        return intersection.color;
+        return intersection.color.normalize();
     }
 
     void getSomePixelsToRender(vector<size_t> &v) {
@@ -280,7 +279,7 @@ class Scene {
                     g /= ANTIALIASING_POINT_COUNT * ANTIALIASING_POINT_COUNT;
                     b /= ANTIALIASING_POINT_COUNT * ANTIALIASING_POINT_COUNT;
 
-                    color = Color(r, g, b);
+                    color = Color(r, g, b).normalize();
                 }
 
                 pixels[pixel * 3] = (float) color.r;

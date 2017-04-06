@@ -1,37 +1,18 @@
 Version
-    Version irt
+    Version rt
 EndVersion
 
 File
-    Name    refract.obj
-    Directory   obj_examples/
+    Name    refract.rt
+    Directory   rt_examples/
 EndFile
 
 Viewport
-       Origin      100 100 20
-       UpNormal    0 -1 0
-       LookAt      0 0 0
+       Origin      100 50 100 #100 50 20
+       UpNormal    0 1 0
+       LookAt      0 1 0
        Width       10
        Height      10
-       Distance    140    # distance from origin to viewport
+       Distance    100    # distance from origin to viewport
 EndViewport
 
-lights
-    reference
-        power 1
-        distance 1
-    endreference
-    point
-        coords 1 2 -1.2
-        power 3
-    endpoint
-
-    reference
-        power 1
-        distance 1
-    endreference
-    point
-        coords 0 2 2
-        power 7
-    endpoint
-endlights

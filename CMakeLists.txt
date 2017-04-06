@@ -34,4 +34,4 @@ set(SOURCE_FILES
 
 
 add_executable(Ray_Tracing ${SOURCE_FILES})
-target_link_libraries(Ray_Tracing glut GL GLU X11 pthread)
+target_link_libraries(Ray_Tracing glut GL GLU X11 pthread png)

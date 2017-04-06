@@ -9,7 +9,7 @@ materials
     entry
         name red
         color 128 0 0
-        alpha 0
+        alpha 1
         reflect 0
         refract 0
     endentry
@@ -17,7 +17,7 @@ materials
     entry
         name yellow
         color 128 128 128
-        alpha 0
+        alpha 1
         reflect 0
         refract 0
     endentry
@@ -29,14 +29,14 @@ lights
         # Мощность эталонного источника
         power 1
         # Расстояние от него до эталонной плоскости
-        distance 1
+        distance 100
     endreference
     # Описание одного источника света
     point
         # Координаты
-        coords 30 0 0
+        coords 100 -0 0
         # Мощность
-        power 500
+        power 100
     endpoint
 
 

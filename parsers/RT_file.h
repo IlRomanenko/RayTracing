@@ -66,7 +66,6 @@ protected:
             stringScanner.setBuffer(line);
             optionName = stringScanner.nextString();
 
-            optionName = stringScanner.nextString();
             if (optionName == "origin") {
                 origin = stringScanner.nextVector();
             } else if (optionName == "topleft") {

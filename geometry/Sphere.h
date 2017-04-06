@@ -40,7 +40,9 @@ public:
         ldb scalar_distance = ray.getLineCoef(center);
         ldb half_sphere_distance = sqrt(abs(radius * radius - distance * distance));
         ldb ray_d = min(scalar_distance - half_sphere_distance, scalar_distance + half_sphere_distance);
-
+        if (Double::less(ray_d, 0)) {
+            ray_d = max(scalar_distance - half_sphere_distance, scalar_distance + half_sphere_distance);
+        }
         return RayCoefIntersection(ray_d);
     }
 

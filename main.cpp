@@ -6,10 +6,17 @@
 
 #include "KD_tree_test.h"
 #include "parsers/MyParser.h"
+#include <png++/png.hpp>
 
-Scene<MyParser> scene;
-const size_t width = 1600, height = 1600;
-const float* pixels;
+Scene<RT_file> scene;
+
+const string SCENENAME = "transparent";
+const string SCENEFORMAT = ".rt";
+const string DIRECTORY = "examples/rt_examples/";
+
+
+const size_t width = 600, height = 600;
+const float *pixels;
 int currentWindow;
 GLuint textureID;
 
@@ -23,16 +30,16 @@ void render() {
     glBegin(GL_POLYGON);
     {
         glTexCoord2d(0, 0);
-        glVertex2d(-1, -1);
+        glVertex2d(-1, 1);
 
         glTexCoord2d(1, 0);
-        glVertex2d(1, -1);
-
-        glTexCoord2d(1, 1);
         glVertex2d(1, 1);
 
+        glTexCoord2d(1, 1);
+        glVertex2d(1, -1);
+
         glTexCoord2d(0, 1);
-        glVertex2d(-1, 1);
+        glVertex2d(-1, -1);
     }
     glEnd();
 
@@ -65,8 +72,9 @@ void initRayCasting() {
 
     //scene.openScene("examples/obj_examples/buggy.obj", "examples/obj_examples/", width, height);
     //scene.openScene("examples/scene.rt", "examples/obj_examples/", width, height);
-    scene.openScene("refract2.irt", "examples/", width, height);
-
+    scene.openScene(SCENENAME + SCENEFORMAT, DIRECTORY, width, height);
+    //scene.openScene("refract.rt", "examples/rt_examples/", width, height);
+    //transparent
     scene.render();
 
     pixels = scene.getPixels();
@@ -77,19 +85,17 @@ void initRayCasting() {
     glBindTexture(GL_TEXTURE_2D, textureID);
 
 
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, pixels);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, pixels);
 
 
 }
 
 void timer_redisplay(int) {
     glutPostWindowRedisplay(currentWindow);
-    //if (scene.isBusy()) {
-        glutTimerFunc(16, timer_redisplay, 0);
-    //}
+    glutTimerFunc(16, timer_redisplay, 0);
 }
 
 void tempTest() {
@@ -107,14 +113,35 @@ void keyboard(unsigned char chr, int x, int y) {
         scene.antialiasing();
         glutTimerFunc(16, timer_redisplay, 0);
     } else if (chr == '\r') {
-        scene.openScene("orientation.irt", "examples/", width, height);
+        scene.openScene("input.rt", "examples/", width, height);
         scene.render();
-        //pixels = scene.getPixels();
         glutTimerFunc(16, timer_redisplay, 0);
     }
 }
 
-int main(int argc, char** argv) {
+void writeImage(const string &s) {
+
+    png::image<png::rgb_pixel> image(width, height);
+    const float *pixels = scene.getPixels();
+
+    for (size_t i = 0; i < height; i++) {
+        for (size_t j = 0; j < width; j++) {
+            image[i][j] = png::rgb_pixel(
+                    (png_byte) (pixels[(i * width + j) * 3] * 255),
+                    (png_byte) (pixels[(i * width + j) * 3 + 1] * 255),
+                    (png_byte) (pixels[(i * width + j) * 3 + 2] * 255)
+            );
+        }
+    }
+    image.write(s);
+}
+
+void closeEvent() {
+    writeImage("results/" + SCENENAME + ".png");
+}
+
+
+int main(int argc, char **argv) {
 
     //kd_tree_test::MainTest(argc, argv);
     //thread([&](){kd_tree_test::MainTest(argc, argv);}).join();
@@ -136,6 +163,7 @@ int main(int argc, char** argv) {
     glutTimerFunc(100, timer_redisplay, 0);
     glutDisplayFunc(render);
     glutKeyboardFunc(keyboard);
+    glutCloseFunc(closeEvent);
     glutMainLoop();
 
     return 0;

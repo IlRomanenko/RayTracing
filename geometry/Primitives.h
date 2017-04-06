@@ -25,7 +25,7 @@ namespace geometry {
 
     struct Color {
 
-        ldb r, g, b;
+        ldb r, g, b, a;
 
         Color() : r(0), g(0), b(0) {}
 

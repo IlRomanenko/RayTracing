@@ -3,16 +3,16 @@ Version
 EndVersion
 
 File
-    Name    refract.rt
+    Name    transparent.rt
     Directory   rt_examples/
 EndFile
 
 Viewport
-       Origin      100 100 100 #100 50 20
+       Origin      100 50 0
        UpNormal    0 -1 0
-       LookAt      0 1 0
+       LookAt      0 0 0
        Width       10
        Height      10
-       Distance    100    # distance from origin to viewport
+       Distance    20
 EndViewport
 

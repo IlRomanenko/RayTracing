@@ -1,0 +1,66 @@
+viewport
+    origin 100 50. 0.
+    topleft 82.1 36 -4.47 # Верхний-левый угол экрана
+    bottomleft 82.1 46 -4.47 # Нижний-левый угол экрана
+    topright 82.1 36 4.47 # Верхний-правый угол экрана
+endviewport
+
+materials
+    entry
+        name plane
+        color 255 255 155
+        alpha 1
+        reflect 0
+        refract 0
+    endentry
+
+    entry
+        name transparent
+        color 255 255 255
+        alpha 0
+        reflect 0
+        refract 1
+    endentry
+
+endmaterials
+
+geometry
+
+
+    sphere
+        coords 10 5 0
+        radius 5
+        material transparent
+    endsphere
+
+    quadrangle
+    	vertex -2 -10 10.000000
+    	vertex -2 -10 -10.000000
+    	vertex -2 10 -10.000000
+        vertex -2 10 10.000000
+        material plane
+    endquadrangle
+
+    #quadrangle
+    #	vertex -2 -2 2.000000
+    #    vertex -2 2 2.000000
+    #	vertex -2 2 -2.000000
+    #	vertex -2 -2 -2.000000
+    #    material plane
+    #endquadrangle
+
+endgeometry
+
+lights
+    reference
+        power 1
+        distance 20
+    endreference
+    point
+        coords 1 15 1
+        power 1000
+    endpoint
+endlights
+
+
+
