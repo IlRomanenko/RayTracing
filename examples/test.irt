@@ -1,0 +1,29 @@
+Version
+    Version irt
+EndVersion
+
+File
+    Name model.obj
+    Directory obj_examples/
+EndFile
+
+Viewport
+       Origin      100 0 0
+       UpNormal    0 1 0
+       LookAt      0 4 0
+       Width       10
+       Height      10
+       Distance    500    # distance from origin to viewport
+EndViewport
+
+lights
+#5
+    reference
+        power 1
+        distance 1
+    endreference
+    point
+        coords 100  103 0
+        power 5000
+    endpoint
+endlights

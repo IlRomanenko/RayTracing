@@ -234,7 +234,7 @@ public:
 
         const auto &split = findPlane(objects, boundingBox);
 
-        if (Double::greaterEqual(split.cost, objects.size() * intersectionCoef) || depth > 10) {
+        if (Double::greaterEqual(split.cost, objects.size() * intersectionCoef)) {
             node->isLeaf = new KD_tree_leaf();
             node->isLeaf->objects = objects;
             return node;

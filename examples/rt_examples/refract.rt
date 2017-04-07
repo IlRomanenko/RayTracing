@@ -20,7 +20,7 @@ materials
         color 255 255 255
         alpha 0.2
         reflect 0
-        refract 1
+        refract 1.2
     endentry
 
     entry

@@ -25,7 +25,7 @@ class Scene {
 
     const ldb ANTIALIASING_CONST = 0.2;
     const int ANTIALIASING_POINT_COUNT = 5;
-    const int MAX_RAY_TRACING_DEPTH = 1;
+    const int MAX_RAY_TRACING_DEPTH = 10;
     const int LIGHT_RAYS_COUNT = 15; //maybe later
     const ldb BIAS = 1e-7;
 
@@ -70,7 +70,7 @@ class Scene {
                 ldb sqr_length = normLightPos.sqrLength();
                 normLightPos.normalize();
 
-                ldb currentPointLightContribution = object->getNormal(pnt) * normLightPos;
+                ldb currentPointLightContribution = (object->getNormal(pnt) * normLightPos);
                 ldb cur_power = light.getPower() / light.getReference().power * light.getReference().distance;
 
                 currentPointLightContribution *= cur_power;

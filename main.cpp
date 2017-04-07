@@ -9,7 +9,7 @@
 
 Scene<RT_file> scene;
 
-const string SCENENAME = "hard";
+const string SCENENAME = "test";
 const string SCENEFORMAT = ".rt";
 const string DIRECTORY = "examples/rt_examples/";
 
@@ -17,7 +17,7 @@ const string TEMP_SCENEFORMAT = ".rt";
 const string TEMP_DIRECTORY = "examples/rt_examples/";
 
 
-const size_t width = 600, height = 600;
+const size_t width = 1000, height = 1000;
 const float *pixels;
 int currentWindow;
 GLuint textureID;
@@ -108,9 +108,15 @@ void tempTest() {
     vector<IGeometryObject*> geometry;
 
     MyParser parser(factory, viewport, lights, geometry);
+<<<<<<< HEAD
 
     parser.openScene(SCENENAME + SCENEFORMAT, DIRECTORY);
 
+=======
+
+    parser.openScene(SCENENAME + SCENEFORMAT, DIRECTORY);
+
+>>>>>>> master
     parser.saveAsRTFile(SCENENAME + TEMP_SCENEFORMAT, TEMP_DIRECTORY);
 */
 }
@@ -118,10 +124,6 @@ void tempTest() {
 void keyboard(unsigned char chr, int, int) {
     if (chr == ' ') {
         scene.antialiasing();
-        glutTimerFunc(16, timer_redisplay, 0);
-    } else if (chr == '\r') {
-        scene.openScene("input.rt", "examples/", width, height);
-        scene.render();
         glutTimerFunc(16, timer_redisplay, 0);
     }
 }
