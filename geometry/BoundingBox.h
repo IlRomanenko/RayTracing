@@ -147,7 +147,7 @@ public:
         return ans;
     }
 
-    pair<bool, array<RayCoefIntersection, 2> > intersect(const Ray &ray) const {
+    pair<bool, array<RayCoefIntersection, 2> > intersect2(const Ray &ray) const {
 
         RayCoefIntersection pu, pd, pl, pr, pn, pf;
         pd = createPlaneAndIntersect(ray,
@@ -199,6 +199,66 @@ public:
         return make_pair(true, array<RayCoefIntersection, 2>{RayCoefIntersection(coefs.front()),
                                                              RayCoefIntersection(coefs.back())});
     }
+
+    pair<bool, array<RayCoefIntersection, 2> > intersect(const Ray &ray) const {
+
+        RayCoefIntersection pu, pd, pl, pr, pn, pf;
+
+        pd = createPlaneAndIntersect(ray,
+                                     Vector(currentCoords[0][0], currentCoords[1][0], currentCoords[2][0]),
+                                     Vector(currentCoords[0][1], currentCoords[1][0], currentCoords[2][0]),
+                                     Vector(currentCoords[0][0], currentCoords[1][1], currentCoords[2][0]));
+        pu = createPlaneAndIntersect(ray,
+                                     Vector(currentCoords[0][0], currentCoords[1][0], currentCoords[2][1]),
+                                     Vector(currentCoords[0][1], currentCoords[1][0], currentCoords[2][1]),
+                                     Vector(currentCoords[0][0], currentCoords[1][1], currentCoords[2][1]));
+
+        pl = createPlaneAndIntersect(ray,
+                                     Vector(currentCoords[0][0], currentCoords[1][0], currentCoords[2][0]),
+                                     Vector(currentCoords[0][0], currentCoords[1][1], currentCoords[2][0]),
+                                     Vector(currentCoords[0][0], currentCoords[1][1], currentCoords[2][1]));
+
+        pr = createPlaneAndIntersect(ray,
+                                     Vector(currentCoords[0][1], currentCoords[1][0], currentCoords[2][0]),
+                                     Vector(currentCoords[0][1], currentCoords[1][1], currentCoords[2][0]),
+                                     Vector(currentCoords[0][1], currentCoords[1][1], currentCoords[2][1]));
+
+        pn = createPlaneAndIntersect(ray,
+                                     Vector(currentCoords[0][0], currentCoords[1][0], currentCoords[2][0]),
+                                     Vector(currentCoords[0][1], currentCoords[1][0], currentCoords[2][0]),
+                                     Vector(currentCoords[0][1], currentCoords[1][0], currentCoords[2][1]));
+        pf = createPlaneAndIntersect(ray,
+                                     Vector(currentCoords[0][0], currentCoords[1][1], currentCoords[2][0]),
+                                     Vector(currentCoords[0][1], currentCoords[1][1], currentCoords[2][0]),
+                                     Vector(currentCoords[0][1], currentCoords[1][1], currentCoords[2][1]));
+
+        vector<ldb> coefs;
+        if (pd) coefs.push_back(pd.getIntersectionPointCoef());
+        if (pu) coefs.push_back(pu.getIntersectionPointCoef());
+
+        if (pl) coefs.push_back(pl.getIntersectionPointCoef());
+        if (pr) coefs.push_back(pr.getIntersectionPointCoef());
+
+        if (pn) coefs.push_back(pn.getIntersectionPointCoef());
+        if (pf) coefs.push_back(pf.getIntersectionPointCoef());
+        sort(coefs.begin(), coefs.end());
+
+        if (coefs.size() == 1) {
+            assert(false);
+            return make_pair(false, array<RayCoefIntersection, 2>{coefs.front(), coefs.front()});
+        } else if (coefs.size() == 0 || coefs.back() < 0) {
+            return make_pair(false, array<RayCoefIntersection, 2>{-1, -1});
+        }
+
+        auto first_coef = *find_if(coefs.begin(), coefs.end(), [](ldb x) { return x > 0; });
+
+        //assert(coefs.front() > 0);
+        //return make_pair(true, array<RayCoefIntersection, 2>{RayCoefIntersection(coefs.front()),
+        //                                                     RayCoefIntersection(coefs.back())});
+        return make_pair(true, array<RayCoefIntersection, 2>{RayCoefIntersection(first_coef),
+                                                             RayCoefIntersection(coefs.back())});
+    }
+
 
     ldb getMin(const size_t axisNumber) const {
         assert(axisNumber < 3);

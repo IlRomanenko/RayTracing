@@ -1,9 +1,9 @@
 #include <iostream>
 #include <GL/freeglut.h>
+#include <chrono>
 #include "base_headers.h"
 #include "scene/Scene.h"
 
-#include "KD_tree_test.h"
 #include "parsers/MyParser.h"
 #include <png++/png.hpp>
 
@@ -12,9 +12,6 @@ Scene<RT_file> scene;
 const string SCENENAME = "test";
 const string SCENEFORMAT = ".rt";
 const string DIRECTORY = "examples/rt_examples/";
-
-const string TEMP_SCENEFORMAT = ".rt";
-const string TEMP_DIRECTORY = "examples/rt_examples/";
 
 
 const size_t width = 1000, height = 1000;
@@ -72,11 +69,7 @@ void glInit() {
 
 void initRayCasting() {
 
-    //scene.openScene("examples/obj_examples/buggy.obj", "examples/obj_examples/", width, height);
-    //scene.openScene("examples/scene.rt", "examples/obj_examples/", width, height);
-    scene.openScene(SCENENAME + SCENEFORMAT, DIRECTORY, width, height);
-    //scene.openScene("refract.rt", "examples/rt_examples/", width, height);
-    //transparent
+    scene.openScene(SCENENAME + SCENEFORMAT, DIRECTORY, width, height);\
     scene.render();
 
     pixels = scene.getPixels();
@@ -98,27 +91,6 @@ void initRayCasting() {
 void timer_redisplay(int) {
     glutPostWindowRedisplay(currentWindow);
     glutTimerFunc(16, timer_redisplay, 0);
-}
-
-void tempTest() {
-/*
-    MaterialsFactory factory;
-    Viewport viewport;
-    vector<Light> lights;
-    vector<IGeometryObject*> geometry;
-
-    MyParser parser(factory, viewport, lights, geometry);
-<<<<<<< HEAD
-
-    parser.openScene(SCENENAME + SCENEFORMAT, DIRECTORY);
-
-=======
-
-    parser.openScene(SCENENAME + SCENEFORMAT, DIRECTORY);
-
->>>>>>> master
-    parser.saveAsRTFile(SCENENAME + TEMP_SCENEFORMAT, TEMP_DIRECTORY);
-*/
 }
 
 void keyboard(unsigned char chr, int, int) {
@@ -145,26 +117,33 @@ void writeImage(const string &s) {
     image.write(s);
 }
 
+auto castDurationToSeconds(chrono::steady_clock::duration dur) {
+    return chrono::duration_cast<chrono::duration<double>>(dur).count();
+}
+
 void closeEvent() {
     writeImage("results/" + SCENENAME + ".png");
+
+    cout << endl;
+    cout << "Total kd-tree build time : " << castDurationToSeconds(scene.getTotalKDTreeBuildTime()) << " s" << endl;
+    cout << "Total render time : " << castDurationToSeconds(scene.getRenderDuration()) << " s" << endl;
+    cout << "Total antialiasing time : " << castDurationToSeconds(scene.getAntialiasingDuration()) << " s" << endl;
+    cout << "Total rays intersected : " << scene.getTotalRaysIntersections() << endl;
+    cout << endl;
 }
+
 
 
 int main(int argc, char **argv) {
 
-    //kd_tree_test::MainTest(argc, argv);
-    //thread([&](){kd_tree_test::MainTest(argc, argv);}).join();
-
+    setStackLimit();
 
     glutInit(&argc, argv);
     glutInitWindowSize(1000, 1000);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     currentWindow = glutCreateWindow("Ray-tracing by Ilya Romanenko");
 
-
     glInit();
-
-    tempTest();
 
     initRayCasting();
 

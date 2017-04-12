@@ -17,12 +17,14 @@
 #include <queue>
 #include <mutex>
 #include <cmath>
+#include <atomic>
 
 using namespace std;
 
 template<typename SceneParser>
 class Scene {
 
+    /// MAGIC CONSTANTS
     const ldb ANTIALIASING_CONST = 0.2;
     const int ANTIALIASING_POINT_COUNT = 5;
     const int MAX_RAY_TRACING_DEPTH = 10;
@@ -30,24 +32,34 @@ class Scene {
     const ldb BIAS = 1e-7;
 
 
+    /// GEOMETRY, VIEWPORT, MATERIALS, LIGHTS
     MaterialsFactory materialsFactory;
     vector<IGeometryObject *> geometry;
     vector<Light> lights;
     Viewport viewport;
 
 
+    /// KD-TREE
     KD_Tree kd_tree;
 
-    ThreadPool<void> threadPool;
 
-    vector<future<void> > workers;
-    queue<size_t> needToCalcPixels;
+    /// RENDER's WORKERS VARIABLES
+    ThreadPool<void> threadPool;
+    vector<size_t> needToCalcPixels;
     mutex workerMutex;
 
-
+    /// PIXELS VARIABLES
     const size_t workerPixelsCount = 10;
     size_t width, height;
     float *pixels;
+
+    /// TIME VARIABLES
+    chrono::steady_clock::time_point begin_render_time_point;
+    chrono::steady_clock::time_point end_render_time_point;
+
+    chrono::steady_clock::time_point begin_antialiasing_time_point;
+    chrono::steady_clock::time_point end_antialiasing_time_point;
+
 
     Intersection castRayKD(const Ray &ray) {
         Ray nray = ray;
@@ -71,10 +83,11 @@ class Scene {
                 normLightPos.normalize();
 
                 ldb currentPointLightContribution = (object->getNormal(pnt) * normLightPos);
-                ldb cur_power = light.getPower() / light.getReference().power * light.getReference().distance;
+
+                ldb distance_for_origin_power = light.getReference().distance / light.getReference().power;
+                ldb cur_power = light.getPower() * distance_for_origin_power / sqr_length;
 
                 currentPointLightContribution *= cur_power;
-                currentPointLightContribution /= /*4 * M_PI **/ sqr_length;
 
                 lightIntensity += max(currentPointLightContribution, (ldb) 0.0);
             }
@@ -129,7 +142,7 @@ class Scene {
         if (depth > MAX_RAY_TRACING_DEPTH) {
             return Intersection();
         }
-        additionalLight =0;
+        additionalLight = 0;
         Intersection current = castRayKD(ray);
 
         if (!current) {
@@ -150,7 +163,7 @@ class Scene {
 
         ldb lightIntensity = getLightIntensity(current.intersectionPoint, current.object) + additionalLight;
 
-        ldb normalizedLight = min((ldb)1, lightIntensity);
+        ldb normalizedLight = min((ldb) 1, lightIntensity);
 
 
         switch (currentMaterial->getType()) {
@@ -222,8 +235,8 @@ class Scene {
         unique_lock<mutex> lock(workerMutex);
 
         for (size_t i = 0; i < min(workerPixelsCount, needToCalcPixels.size()); i++) {
-            v.push_back(needToCalcPixels.front());
-            needToCalcPixels.pop();
+            v.push_back(needToCalcPixels.back());
+            needToCalcPixels.pop_back();
         }
     }
 
@@ -235,57 +248,61 @@ class Scene {
         vector<size_t> pixelToRender;
 
         getSomePixelsToRender(pixelToRender);
+
         while (pixelToRender.size() > 0) {
+            size_t pixel = pixelToRender.back();
+            pixelToRender.pop_back();
 
-            while (pixelToRender.size() > 0) {
-                size_t pixel = pixelToRender.back();
-                pixelToRender.pop_back();
+            current_h = pixel / width;
+            current_w = pixel % width;
 
-                current_h = pixel / width;
-                current_w = pixel % width;
+            Point basePoint = viewport.getTopLeft() + base_w * current_w + base_h * current_h;
 
-                Point basePoint = viewport.getTopLeft() + base_w * current_w + base_h * current_h;
+            Color color;
 
-                Color color;
+            if (!antialiasing) {
 
-                if (!antialiasing) {
+                Point screenPoint = basePoint + defaultOffset;
+                Ray newRay = LineFromTwoPoints(origin, screenPoint);
+                color = traceRay(newRay);
 
-                    Point screenPoint = basePoint + defaultOffset;
-                    Ray newRay = LineFromTwoPoints(origin, screenPoint);
-                    color = traceRay(newRay);
+            } else {
 
-                } else {
+                ldb r = 0, g = 0, b = 0;
 
-                    ldb r = 0, g = 0, b = 0;
+                Point base_w_anti_al = base_w / ANTIALIASING_POINT_COUNT;
+                Point base_h_anti_al = base_h / ANTIALIASING_POINT_COUNT;
 
-                    Point base_w_anti_al = base_w / ANTIALIASING_POINT_COUNT;
-                    Point base_h_anti_al = base_h / ANTIALIASING_POINT_COUNT;
+                for (int i = 0; i < ANTIALIASING_POINT_COUNT; i++) {
+                    for (int j = 0; j < ANTIALIASING_POINT_COUNT; j++) {
 
-                    for (int i = 0; i < ANTIALIASING_POINT_COUNT; i++) {
-                        for (int j = 0; j < ANTIALIASING_POINT_COUNT; j++) {
-
-                            Point newPoint = basePoint + base_w_anti_al * j + base_h_anti_al * i;
-                            Ray newRay = LineFromTwoPoints(origin, newPoint);
-                            Color clr = traceRay(newRay);
-                            r += clr.r;
-                            g += clr.g;
-                            b += clr.b;
-                        }
+                        Point newPoint = basePoint + base_w_anti_al * j + base_h_anti_al * i;
+                        Ray newRay = LineFromTwoPoints(origin, newPoint);
+                        Color clr = traceRay(newRay);
+                        r += clr.r;
+                        g += clr.g;
+                        b += clr.b;
                     }
-
-                    r /= ANTIALIASING_POINT_COUNT * ANTIALIASING_POINT_COUNT;
-                    g /= ANTIALIASING_POINT_COUNT * ANTIALIASING_POINT_COUNT;
-                    b /= ANTIALIASING_POINT_COUNT * ANTIALIASING_POINT_COUNT;
-
-                    color = Color(r, g, b).normalize();
                 }
 
-                pixels[pixel * 3] = (float) color.r;
-                pixels[pixel * 3 + 1] = (float) color.g;
-                pixels[pixel * 3 + 2] = (float) color.b;
+                r /= ANTIALIASING_POINT_COUNT * ANTIALIASING_POINT_COUNT;
+                g /= ANTIALIASING_POINT_COUNT * ANTIALIASING_POINT_COUNT;
+                b /= ANTIALIASING_POINT_COUNT * ANTIALIASING_POINT_COUNT;
+
+                color = Color(r, g, b).normalize();
             }
 
-            getSomePixelsToRender(pixelToRender);
+            pixels[pixel * 3] = (float) color.r;
+            pixels[pixel * 3 + 1] = (float) color.g;
+            pixels[pixel * 3 + 2] = (float) color.b;
+        }
+        if (needToCalcPixels.size() > 0) {
+            threadPool.submit(bind(render_lambda, antialiasing));
+        }
+        if (antialiasing) {
+            end_antialiasing_time_point = chrono::steady_clock::now();
+        } else {
+            end_render_time_point = chrono::steady_clock::now();
         }
     }
 
@@ -320,27 +337,21 @@ public:
 
     void render(size_t numberOfThreads = 8) {
 
+        begin_render_time_point = chrono::steady_clock::now();
+
         threadPool.setWorkersNumber(numberOfThreads);
 
         for (size_t i = 0; i < width * height; i++) {
-            needToCalcPixels.push(i);
+            needToCalcPixels.push_back(i);
         }
 
-        auto workerLambda = [&]() { renderWorker(); };
-
         for (size_t i = 0; i < numberOfThreads; i++) {
-            workers.push_back(threadPool.submit(move(workerLambda)));
+            threadPool.submit(bind(render_lambda, false));
         }
     }
 
     bool isBusy() const {
-        bool busy = false;
-        for (const auto &th : workers) {
-            if (th.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready) {
-                busy = true;
-            }
-        }
-        return busy;
+        return !needToCalcPixels.empty();
     }
 
     bool antialiasing(size_t numberOfThreads = 8) {
@@ -348,6 +359,8 @@ public:
         if (isBusy()) {
             return false;
         }
+
+        begin_antialiasing_time_point = chrono::steady_clock::now();
 
         int offsets[3] = {-1, 0, 1};
 
@@ -368,16 +381,21 @@ public:
                     }
                 }
                 if (Double::less(ANTIALIASING_CONST, resultDifference)) {
-                    needToCalcPixels.push(getPixelPos(i, j));
+                    needToCalcPixels.push_back(getPixelPos(i, j));
                 }
             }
         }
 
+        for (auto pixel : needToCalcPixels) {
+            pixels[pixel * 3] = 1;
+            pixels[pixel * 3 + 1] = 1;
+            pixels[pixel * 3 + 2] = 1;
+        }
+
         threadPool.setWorkersNumber(numberOfThreads);
 
-        auto antialiasingWorker = [&]() { renderWorker(true); };
         for (size_t i = 0; i < numberOfThreads; i++) {
-            threadPool.submit(move(antialiasingWorker));
+            threadPool.submit(bind(render_lambda, true));
         }
 
         return true;
@@ -394,9 +412,29 @@ public:
         lights.clear();
     }
 
+    auto getRenderDuration() const {
+        return end_render_time_point - begin_render_time_point;
+    }
+
+    auto getAntialiasingDuration() const {
+        return end_antialiasing_time_point - begin_antialiasing_time_point;
+    }
+
+    auto getTotalRaysIntersections() const {
+        return kd_tree.total_rays_intersections.load();
+    }
+
+    auto getTotalKDTreeBuildTime() const {
+        return kd_tree.total_build_time;
+    }
+
     ~Scene() {
         threadPool.shutdown();
     }
 
+private:
+    const function<void(bool)> render_lambda = [this](bool need_antialiasing) {
+        renderWorker(need_antialiasing);
+    };
 };
 

@@ -9,8 +9,29 @@
 #include <vector>
 #include <queue>
 #include <functional>
+#include <sys/resource.h>
 
 using namespace std;
+
+void setStackLimit() {
+    const rlim_t kStackSize = 10 * 1024 * 1024 * 1024L;   // min stack size = 16 GB
+    struct rlimit rl;
+    int result;
+
+    result = getrlimit(RLIMIT_STACK, &rl);
+    if (result == 0)
+    {
+        if (rl.rlim_cur < kStackSize)
+        {
+            rl.rlim_cur = kStackSize;
+            result = setrlimit(RLIMIT_STACK, &rl);
+            if (result != 0)
+            {
+                fprintf(stderr, "setrlimit returned result = %d\n", result);
+            }
+        }
+    }
+}
 
 template<class Value>
 class ThreadPool {
@@ -34,7 +55,8 @@ class ThreadPool {
     }
 
     void workerFunction() {
-        for (;;) {
+        setStackLimit();
+        while(true) {
             packaged_task<Value()> task;
             {
                 unique_lock<mutex> lock(queue_mutex);

@@ -2,7 +2,10 @@
 // Created by ilya on 06.03.17.
 //
 #pragma once
+
 #include <climits>
+#include <atomic>
+#include <chrono>
 
 #include "../base_headers.h"
 #include "../geometry/IGeometryObject.h"
@@ -119,7 +122,7 @@ public:
 
         for (const auto &obj : objects) {
             const auto &bbox = obj->getBoundingBox();
-            if (Double::equal(bbox.getMin(bboxSplit.axis), bbox.getMax(bboxSplit.axis)) &&
+            /*if (Double::equal(bbox.getMin(bboxSplit.axis), bbox.getMax(bboxSplit.axis)) &&
                 Double::equal(bbox.getMin(bboxSplit.axis), bboxSplit.value)) {
 
                 if (bboxSplit.type == BoundingBoxSplit::SplitType::LEFT) {
@@ -128,14 +131,14 @@ public:
                     rightPart.push_back(obj);
                 }
 
-            } else {
-                if (Double::less(bbox.getMin(bboxSplit.axis), bboxSplit.value)) {
-                    leftPart.push_back(obj);
-                }
-                if (Double::less(bboxSplit.value, bbox.getMax(bboxSplit.axis))) {
-                    rightPart.push_back(obj);
-                }
+            } else {*/
+            if (Double::less(bbox.getMin(bboxSplit.axis), bboxSplit.value + eps)) {
+                leftPart.push_back(obj);
             }
+            if (Double::less(bboxSplit.value - eps, bbox.getMax(bboxSplit.axis))) {
+                rightPart.push_back(obj);
+            }
+            // }
         }
 
         return {leftPart, rightPart};
@@ -262,12 +265,18 @@ public:
             return Intersection();
         }
 
+//        if (node->nodeSize == 0) {
+//            return Intersection();
+//        }
+
+        total_rays_intersections++;
         if (node->isLeaf != nullptr) {
             Intersection intersection;
             ldb intersectionCoef = INFINITY;
 
             for (const auto &obj : node->isLeaf->objects) {
                 auto coef_inters = obj->intersect(ray);
+                total_rays_intersections++;
                 if (coef_inters && Double::less(coef_inters.getIntersectionPointCoef(), intersectionCoef) &&
                     Double::greater(coef_inters.getIntersectionPointCoef(), 0)) {
 
@@ -282,16 +291,56 @@ public:
             return intersection;
         }
 
-        Intersection left = findIntersection(node->left, ray, coefs);
-        Intersection right = findIntersection(node->right, ray, coefs);
-        if (left) {
-            if (right && Double::greater(left.rayIntersectionCoef, right.rayIntersectionCoef) &&
-                Double::greater(right.rayIntersectionCoef, 0)) {
-                return right;
+        if (ray.direction.getCoordArray()[node->splitPlane.second] > 0) {
+            auto leftInt = findIntersection(node->left, ray, coefs);
+            if (!leftInt) {
+                return findIntersection(node->right, ray, coefs);
             }
-            return left;
+            return leftInt;
+        } else {
+            auto rightInt = findIntersection(node->right, ray, coefs);
+            if (!rightInt) {
+                return findIntersection(node->left, ray, coefs);
+            }
+            return rightInt;
         }
-        return right;
+        /*auto leftBBoxIntersection = node->left->boundingBox.intersect(ray);
+        auto rightBBoxIntersection = node->right->boundingBox.intersect(ray);
+        if (leftBBoxIntersection.first && rightBBoxIntersection.first) {
+
+            if (leftBBoxIntersection.second.front().getIntersectionPointCoef() <
+                    rightBBoxIntersection.second.front().getIntersectionPointCoef()) {
+                auto left = findIntersection(node->left, ray, coefs);
+                if (left) {
+                    return left;
+                } else {
+                    return findIntersection(node->right, ray, coefs);
+                }
+            } else {
+
+                auto right = findIntersection(node->right, ray, coefs);
+                if (right) {
+                    return right;
+                } else {
+                    return findIntersection(node->left, ray, coefs);
+                }
+            }
+
+        } else if (leftBBoxIntersection.first) {
+            return findIntersection(node->left, ray, coefs);
+        } else {
+            return findIntersection(node->right, ray, coefs);
+        }
+
+       Intersection left = findIntersection(node->left, ray, coefs);
+       Intersection right = findIntersection(node->right, ray, coefs);
+       if (left) {
+           if (right && Double::greater(left.rayIntersectionCoef, right.rayIntersectionCoef)) {
+               return right;
+           }
+           return left;
+       }
+       return right;*/
     }
 
 public:
@@ -308,6 +357,10 @@ public:
     }
 
     void buildTree(const vector<IGeometryObject *> &objects, size_t numberOfThreads = 8) {
+
+        using namespace chrono;
+        auto begin_time = steady_clock::now();
+
         if (root != nullptr) {
             delete root;
             delete pool;
@@ -318,6 +371,9 @@ public:
         root = result.get();
         pool->shutdown();
         delete pool;
+
+        auto end_time = steady_clock::now();
+        total_build_time = end_time - begin_time;
     }
 
     Intersection castRay(const Ray &ray) {
@@ -337,18 +393,22 @@ public:
 
 public:
 
-    const ldb traversalCoef = 2, intersectionCoef = 0.5;
+    const ldb traversalCoef = 2, intersectionCoef = 1;
 
     static const ldb INFINITY;
+
+    atomic_ullong total_rays_intersections{0};
+
+    chrono::steady_clock::duration total_build_time;
 
     pnode root;
 
     ThreadPool<pnode> *pool;
 
-    const function<pnode(const vector<IGeometryObject*> &, const BoundingBox&, size_t)> buildLambda =
+    const function<pnode(const vector<IGeometryObject *> &, const BoundingBox &, size_t)> buildLambda =
             [&](const vector<IGeometryObject *> &cur_objects, const BoundingBox &boundingBox, size_t depth) {
-        return recBuild(cur_objects, boundingBox, depth + 1);
-    };
+                return recBuild(cur_objects, boundingBox, depth + 1);
+            };
 };
 
 const ldb KD_Tree::__builtin_inff() {
