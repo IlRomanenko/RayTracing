@@ -14,7 +14,7 @@ const string SCENEFORMAT = ".rt";
 const string DIRECTORY = "examples/rt_examples/";
 
 
-const size_t width = 1000, height = 1000;
+const size_t width = 500, height = 500;
 const float *pixels;
 int currentWindow;
 GLuint textureID;

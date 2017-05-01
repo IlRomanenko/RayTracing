@@ -290,7 +290,7 @@ public:
             }
             return intersection;
         }
-
+/*
         if (ray.direction.getCoordArray()[node->splitPlane.second] > 0) {
             auto leftInt = findIntersection(node->left, ray, coefs);
             if (!leftInt) {
@@ -303,7 +303,7 @@ public:
                 return findIntersection(node->left, ray, coefs);
             }
             return rightInt;
-        }
+        }*/
         /*auto leftBBoxIntersection = node->left->boundingBox.intersect(ray);
         auto rightBBoxIntersection = node->right->boundingBox.intersect(ray);
         if (leftBBoxIntersection.first && rightBBoxIntersection.first) {
@@ -330,7 +330,7 @@ public:
             return findIntersection(node->left, ray, coefs);
         } else {
             return findIntersection(node->right, ray, coefs);
-        }
+        }*/
 
        Intersection left = findIntersection(node->left, ray, coefs);
        Intersection right = findIntersection(node->right, ray, coefs);
@@ -340,7 +340,7 @@ public:
            }
            return left;
        }
-       return right;*/
+       return right;
     }
 
 public:
