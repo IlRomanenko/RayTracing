@@ -15,6 +15,12 @@ public:
         material = quadrangleMaterial;
     }
 
+    Quadrangle(const vector<Vector> &trianglePoints, const vector<Vector> &textureCoords, Material *quadrangleMaterial)
+            : Polygon(trianglePoints, textureCoords) {
+        material = quadrangleMaterial;
+    }
+
+
     ostream &operator<<(ostream &stream) override;
 
 };

@@ -46,10 +46,6 @@ public:
         return RayCoefIntersection(ray_d);
     }
 
-    int getTag() const override {
-        return 1;
-    }
-
     BoundingBox getBoundingBox() const override {
         return BoundingBox(center, radius, radius, radius);
     }

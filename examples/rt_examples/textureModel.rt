@@ -1,0 +1,44 @@
+
+materials
+	entry
+		name id1
+		color 0 0 255
+		alpha 1
+		reflect 0
+		refract 0
+		image mandelbrot.png
+	endentry
+endmaterials
+
+geometry
+	quadrangle
+		vertex -20 20 0
+		textureCoord 1 0 0
+
+		vertex -20 -20 0
+		textureCoord 0 0 0
+
+		vertex 20 -20 0
+		textureCoord 0 1 0
+
+		vertex 20 20 0
+		textureCoord 1 1 0
+
+		material id1
+	endquadrangle
+endgeometry
+
+lights
+#5
+    reference
+        power 1
+        distance 0.75
+    endreference
+    point
+        coords 0  0 15
+        power 300
+    endpoint
+
+endlights
+
+

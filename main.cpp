@@ -7,14 +7,16 @@
 #include "parsers/MyParser.h"
 #include <png++/png.hpp>
 
-Scene<RT_file> scene;
+Scene<MyParser> scene;
 
-const string SCENENAME = "test";
-const string SCENEFORMAT = ".rt";
-const string DIRECTORY = "examples/rt_examples/";
+const string SCENENAME = "texture";
+const string SCENEFORMAT = ".irt";
+//const string SCENEFORMAT = ".rt";
+//const string DIRECTORY = "examples/rt_examples/";
+const string DIRECTORY = "examples/";
 
 
-const size_t width = 500, height = 500;
+const size_t width = 1000, height = 1000;
 const float *pixels;
 int currentWindow;
 GLuint textureID;

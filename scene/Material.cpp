@@ -4,13 +4,7 @@
 
 
 #include "Material.h"
-
-void Material::dispose() {
-    if (factory != nullptr) {
-        factory->dispose(materialId);
-    }
-}
-
+/*
 ostream &operator<<(ostream &stream, const Material &material) {
 
     stream << "\tentry" << endl;
@@ -26,3 +20,4 @@ ostream &operator<<(ostream &stream, const Material &material) {
 
     return stream;
 }
+*/

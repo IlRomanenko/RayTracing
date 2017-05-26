@@ -16,6 +16,12 @@ public:
         material = triangleMaterial;
     }
 
+    Triangle(const vector<Vector> &trianglePoints, const vector<Vector> &textureCoords, Material *triangleMaterial)
+            : Polygon(trianglePoints, textureCoords) {
+        material = triangleMaterial;
+    }
+
+
     ostream &operator<<(ostream &stream) override;
 };
 

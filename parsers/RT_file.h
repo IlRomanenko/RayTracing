@@ -19,6 +19,8 @@ using namespace geometry;
 
 class RT_file : public ISceneParser {
 
+    string currentDirectory;
+
 protected:
     void checkEofScanner(FileScanner &scanner, const string &group) {
         if (scanner.eof()) {
@@ -28,7 +30,7 @@ protected:
     }
 
     virtual void parseFile(const string &filename) {
-        FileScanner scanner(filename);
+        FileScanner scanner(currentDirectory + filename);
 
         string line;
         while (!scanner.eof()) {
@@ -98,7 +100,7 @@ protected:
         }
     }
 
-    void readMaterialEntry(FileScanner &scanner) {
+    virtual void readMaterialEntry(FileScanner &scanner) {
         string line;
 
         string material_name;
@@ -107,6 +109,9 @@ protected:
 
         StringScanner stringScanner;
         string optionName;
+
+        string imageName;
+        bool isTexture = false;
 
         while ((line = scanner.nextLine()) != "endentry") {
 
@@ -129,13 +134,20 @@ protected:
                 g = stringScanner.nextInt();
                 b = stringScanner.nextInt();
                 color = Color(r, g, b);
+            } else if (optionName == "image") {
+                imageName = stringScanner.nextString();
+                isTexture = true;
             } else {
                 fprintf(stderr, "Unsupported file format.\nBug with materials -> entry -> optionName %s",
                         optionName.c_str());
                 throw exception();
             }
         }
-        materialsFactory.constructMaterial(material_name, color, alpha, reflect, refract);
+        if (isTexture) {
+            materialsFactory.constructTextureMaterial(material_name, currentDirectory + imageName, alpha, reflect, refract);
+        } else {
+            materialsFactory.constructMaterial(material_name, color, alpha, reflect, refract);
+        }
     }
 
     void lightsSection(FileScanner &scanner) {
@@ -287,6 +299,7 @@ protected:
         string optionName;
 
         vector<Point> vertexes;
+        vector<Point> textureCoords;
 
         while ((line = scanner.nextLine()) != "endtriangle") {
 
@@ -297,6 +310,8 @@ protected:
 
             if (optionName == "vertex") {
                 vertexes.push_back(stringScanner.nextVector());
+            } else if (optionName == "textureCoord") {
+                textureCoords.push_back(stringScanner.nextVector());
             } else if (optionName == "material") {
                 material_name = stringScanner.nextString();
             } else {
@@ -310,8 +325,11 @@ protected:
             throw exception();
         }
 
-        //Todo add triangle
-        geometry.push_back(new Triangle(vertexes, materialsFactory.getMaterial(material_name)));
+        if (textureCoords.size() != 0) {
+            geometry.push_back(new Triangle(vertexes, textureCoords, materialsFactory.getMaterial(material_name)));
+        } else {
+            geometry.push_back(new Triangle(vertexes, materialsFactory.getMaterial(material_name)));
+        }
     }
 
     void readQuadrangle(FileScanner &scanner) {
@@ -323,6 +341,7 @@ protected:
         string optionName;
 
         vector<Point> vertexes;
+        vector<Point> textureCoords;
 
         while ((line = scanner.nextLine()) != "endquadrangle") {
 
@@ -333,6 +352,8 @@ protected:
 
             if (optionName == "vertex") {
                 vertexes.push_back(stringScanner.nextVector());
+            } else if (optionName == "textureCoord") {
+                textureCoords.push_back(stringScanner.nextVector());
             } else if (optionName == "material") {
                 material_name = stringScanner.nextString();
             } else {
@@ -348,7 +369,11 @@ protected:
 
         //Todo add quadrangle
 
-        geometry.push_back(new Quadrangle(vertexes, materialsFactory.getMaterial(material_name)));
+        if (textureCoords.size() != 0) {
+            geometry.push_back(new Quadrangle(vertexes, textureCoords, materialsFactory.getMaterial(material_name)));
+        } else {
+            geometry.push_back(new Quadrangle(vertexes, materialsFactory.getMaterial(material_name)));
+        }
     }
 
 
@@ -362,7 +387,8 @@ public:
             : ISceneParser(factory, viewport, lights, geometry) {}
 
     void openScene(const string &filename, const string &directory) override {
-        parseFile(directory + filename);
+        currentDirectory = directory;
+        parseFile(filename);
     }
 
 };

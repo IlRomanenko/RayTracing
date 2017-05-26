@@ -6,6 +6,7 @@
 #include "../geometry/IGeometryObject.h"
 #include "../scene/Light.h"
 #include "../scene/Viewport.h"
+#include "../scene/MaterialFactory.h"
 
 class ISceneParser {
 

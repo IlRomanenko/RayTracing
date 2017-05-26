@@ -106,7 +106,7 @@ class Scene {
         if (Double::less(cosi, 0)) {
             cosi *= -1;
         } else {
-            swap(etai, etat);
+            std::swap(etai, etat);
             n = n * -1;
         }
         ldb eta = etai / etat;
@@ -165,10 +165,11 @@ class Scene {
 
         ldb normalizedLight = min((ldb) 1, lightIntensity);
 
+        Vector texturePoint = current.object->getTexturePoint(intersectionPoint);
 
         switch (currentMaterial->getType()) {
             case ReflectDiffuse: {
-                materialColor = current.object->getMaterial()->getColor() * (1 - currentMaterial->getReflect());
+                materialColor = current.object->getMaterial()->getColor(texturePoint) * (1 - currentMaterial->getReflect());
                 Ray reflectRay = ray.getReflectRay(intersectionPoint, intersectionNormal);
                 Intersection reflectInter = castRay(reflectRay, lightIntensity, depth + 1);
                 if (reflectInter) {
@@ -197,12 +198,12 @@ class Scene {
                 break;
             }
             case Diffuse: {
-                materialColor = current.object->getMaterial()->getColor() * normalizedLight;
+                materialColor = current.object->getMaterial()->getColor(texturePoint) * normalizedLight;
                 current.color = materialColor;
                 break;
             }
             case Transparent: {
-                materialColor = currentMaterial->getColor() * currentMaterial->getAlpha();
+                materialColor = currentMaterial->getColor(texturePoint) * currentMaterial->getAlpha();
 
                 Vector refractDirection = refract(ray, intersectionNormal, currentMaterial->getRefract());
 

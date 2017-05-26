@@ -5,19 +5,14 @@
 
 #include <iostream>
 #include "../base_headers.h"
-
 using namespace geometry;
 using namespace std;
-
-class MaterialsFactory;
 
 enum MaterialType {
     ReflectDiffuse, ReflectRefract, Diffuse, Transparent
 };
 
 class Material {
-
-    MaterialsFactory *factory;
 
     size_t materialId;
 
@@ -28,7 +23,9 @@ class Material {
 
     string materialName;
 
-protected:
+public:
+
+    Material() = delete;
 
     Material(size_t materialId, Color color, ldb alpha, ldb reflect, ldb refract, const string &materialName) {
         this->materialId = materialId;
@@ -49,10 +46,7 @@ protected:
         }
     }
 
-    ~Material() {}
-
-public:
-    Material() = delete;
+    virtual ~Material() {}
 
     ldb getRefract() const {
         return refract;
@@ -66,7 +60,7 @@ public:
         return alpha;
     }
 
-    Color getColor() const {
+    virtual Color getColor(const Vector &pos) const {
         return color;
     }
 
@@ -74,73 +68,27 @@ public:
         return type;
     }
 
-    void dispose();
-
     const string &getMaterialName() const {
         return materialName;
     }
 
-    friend ostream &operator<<(ostream &stream, const Material &material);
+//    friend ostream &operator<<(ostream &stream, const Material &material);
 
-    friend class MaterialsFactory;
+    virtual ostream &operator<<(ostream &stream) const {
+
+        stream << "\tentry" << endl;
+        stream << "\t\tname " << materialName << endl;
+        stream << "\t\tcolor " << (u_int) (color.r * 255)
+               << ' ' << (u_int) (color.g * 255)
+               << ' ' << (u_int) (color.b * 255) << endl;
+
+        stream << "\t\talpha " << alpha << endl;
+        stream << "\t\treflect " << reflect << endl;
+        stream << "\t\trefract " << refract << endl;
+        stream << "\tendentry" << endl;
+
+        return stream;
+    }
+
 };
 
-class MaterialsFactory {
-
-
-    map<size_t, Material *> materials;
-    map<size_t, int> links; //yes, hand made links counter
-
-    size_t getHashCode(const string &s) {
-        const size_t base = 259;
-
-        size_t hsh = 0;
-        for (char chr : s) {
-            hsh += hsh * base + chr;
-        }
-        return hsh;
-    }
-
-public:
-
-    Material *constructMaterial(const string &materialName, const Color &color, ldb alpha, ldb reflect, ldb refract) {
-        size_t hash = getHashCode(materialName);
-
-        Material *currentMaterial = new Material(hash, color, alpha, reflect, refract, materialName);
-
-        materials[hash] = currentMaterial;
-        links[hash]++;
-
-        return currentMaterial;
-    }
-
-    Material *getMaterial(const string &materialName) {
-        size_t hash = getHashCode(materialName);
-        Material *currentMaterial = materials[hash];
-        links[hash]++;
-        return currentMaterial;
-    }
-
-    void dispose(size_t materialId) {
-        links[materialId]--;
-        if (links[materialId] <= 0) {
-            delete materials[materialId];
-            materials.erase(materialId);
-            links.erase(materialId);
-        }
-    }
-
-    const auto getMaterialsVector() const {
-        vector<Material*> mat_vt;
-        for (auto mat_pair : materials) {
-            mat_vt.push_back(mat_pair.second);
-        }
-        return mat_vt;
-    }
-
-    ~MaterialsFactory() {
-        for (pair<size_t, Material *> k_v_pair : materials) {
-            delete k_v_pair.second;
-        }
-    }
-};

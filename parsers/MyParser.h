@@ -220,7 +220,8 @@ public:
         output << "materials" << endl;
         const auto& materials = materialsFactory.getMaterialsVector();
         for (const auto &material : materials) {
-            output << *material << endl;
+            material->operator<<(output);
+            output << endl;
         }
         output << "endmaterials" << endl << endl;
 

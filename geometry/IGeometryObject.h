@@ -26,19 +26,15 @@ public:
         return material;
     }
 
+    virtual Vector getTexturePoint(const Vector& position) const {
+        return Vector(0, 0, 0);
+    }
+
     virtual BoundingBox getBoundingBox() const = 0;
 
     virtual RayCoefIntersection intersect(const Ray &ray) const = 0;
 
-    virtual int getTag() const {
-        return 0;
-    }
-
     virtual ostream& operator<<(ostream &stream) = 0;
 
-    virtual ~IGeometryObject() {
-        if (material != nullptr) {
-            material->dispose();
-        }
-    }
+    virtual ~IGeometryObject() { }
 };
